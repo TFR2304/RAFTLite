@@ -52,10 +52,6 @@ pico4drive_t pico4drive;
 #define ENC4_PIN_A 8
 #define ENC4_PIN_B 9
 
-#define scl 1
-#define sda 0
-
-
 
 #define NUM_ENCODERS 4
 PicoEncoder encoders[NUM_ENCODERS];
@@ -163,7 +159,7 @@ void set_interval(float new_interval)
 
 gchannels_t udp_commands;
 gchannels_t serial_commands;
-gchannels_t i2c_commands;
+gchannels_t serial1_commands;
 commands_list_t pars_list;
 
 const char* pars_fname = "pars.cfg";
@@ -331,21 +327,14 @@ void serial_write(const char *buffer, size_t size)
   } 
 }
 
-void i2c_send_buffer(const char *buffer, size_t size)  // funcao i2c
+
+
+void serial1_write(const char *buffer, size_t size)
 {
-  Wire.beginTransmission(I2C_ADDRESS);
-  Wire.write(buffer, size);  
-  Wire.endTransmission();
+  Serial1.write(buffer, size);
 }
 
-void i2c_receive(int numBytes) 
-{
-  while (Wire.available()) 
-  {
-    char c = Wire.read();  // Read a byte from I2C
-    i2c_commands.process_char(c);  // Pass the byte to gchannels for processing
-  }
-}
+
 
 const char *encToString(uint8_t enc) {
   switch (enc) {
@@ -491,9 +480,6 @@ void setup()
   pinMode(ENC4_PIN_A, INPUT_PULLUP);
   pinMode(ENC4_PIN_B, INPUT_PULLUP);
 
-  pinMode(scl, INPUT_PULLUP);
-  pinMode(sda, INPUT_PULLUP); 
-
   pinMode(TEST_PIN, OUTPUT);
 
   // Motor driver pins
@@ -555,20 +541,15 @@ void setup()
   
   serial_commands.init(process_command, serial_write);
 
-  i2c_commands.init(process_command, i2c_send_buffer);
+  serial1_commands.init(process_command, serial1_write);
 
   robot.pchannels = &serial_commands;
 
   // Start the serial port with 115200 baudrate
   Serial.begin(115200);
+  Serial1.begin(115200);
 
   LittleFS.begin();
-
-  Wire.begin();// i2c_ADDRESS para o slave
-  Wire.onReceive(i2c_receive);
-
-  Wire.setSDA(sda);
-  Wire.setSCL(scl);
 
   float control_interval = 0.04;  // In seconds
   
@@ -712,11 +693,12 @@ void loop()
     //Serial.write(b);
   }  
 
-  if (Wire.available())
-  { // Only do this if there is serial data to be read // Initialize I2C as slave
-    Wire.onReceive(i2c_receive);  // Register callback for receiving data
-    //Serial.begin(115200);
-  }
+  if (Serial1.available()) {  // Only do this if there is serial data to be read
+  
+    b = Serial1.read();    
+    serial1_commands.process_char(b);
+    //Serial.write(b);
+  } 
 
   pico4drive.update();
    
@@ -875,12 +857,12 @@ void loop()
     serial_commands.flush();   
     Serial.println();
 
-    i2c_commands.send_command("u1", robot.u1);
-    i2c_commands.send_command("u2", robot.u2);
-    i2c_commands.send_command("u3", robot.u3);
-    i2c_commands.send_command("u4", robot.u4);
+    serial1_commands.send_command("u1", robot.u1);
+    serial1_commands.send_command("u2", robot.u2);
+    serial1_commands.send_command("u3", robot.u3);
+    serial1_commands.send_command("u4", robot.u4);
 
-    i2c_commands.flush();
+    serial1_commands.flush(); 
 
     http_ota.handle();
   }
