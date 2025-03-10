@@ -3,7 +3,7 @@
 ### RAFTLite
 
  :gear: **Team 4dpo** project files\
- * * Authors * * : 
+<ins>Authors</ins> : 
  - António Moreira, Paulo Costa,
  - Gonçalo Ramos, Guilherme Rodrigues,
  - José Costa, Tomás Ribeiro.
