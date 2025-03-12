@@ -207,7 +207,10 @@ void process_command(command_frame_t frame)
      set_interval(frame.value);
 
   } else if (frame.command_is("v")) { 
-    robot.v_req = frame.value;    
+    robot.v_req = frame.value;  
+  }
+    else if (frame.command_is("vn")) { 
+      robot.vn_req = frame.value;    
 
   } else if (frame.command_is("w")) { 
     robot.w_req = frame.value;    
@@ -861,6 +864,12 @@ void loop()
     serial1_commands.send_command("u2", robot.u2);
     serial1_commands.send_command("u3", robot.u3);
     serial1_commands.send_command("u4", robot.u4);
+
+    serial1_commands.send_command("IR0", robot.IRLine.IR_values[0]);
+    serial1_commands.send_command("IR1", robot.IRLine.IR_values[1]);
+    serial1_commands.send_command("IR2", robot.IRLine.IR_values[2]);
+    serial1_commands.send_command("IR3", robot.IRLine.IR_values[3]);
+    serial1_commands.send_command("IR4", robot.IRLine.IR_values[4]);
 
     serial1_commands.flush(); 
 

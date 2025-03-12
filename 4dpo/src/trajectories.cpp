@@ -45,6 +45,13 @@ float dif_angle(float a0, float a1)
   return normalize_angle(normalize_angle(a0) - normalize_angle(a1));
 }
 
+float signal(float num)
+{
+if(num>=0)
+	return(+1);
+else
+	return(-1);
+}
 
 trajectory_t::trajectory_t()
 {

@@ -26,115 +26,144 @@
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE. */
 
-#include "IRLine.h"
-#include "Arduino.h"
-
-IRLine_t::IRLine_t()
-{
-  IR_WaterLevel = 0;
-  IR_tresh = 512;
-  cross_tresh = 3;
-  black_cross_level = 2.8;
-}
-
-void IRLine_t::calibrate(void)
-{
+  #include "IRLine.h"
+  #include "Arduino.h"
   
-}
-
-
-void IRLine_t::calcIRLineEdgeLeft(void)
-{
-  byte c, found;
-  int v, last_v;
-
-  found = 0;
-  IR_max = 0;
-  pos_left = 2 * 16.0;
-  total = 0;
-  last_v = 0;
-  for (c = 0; c < 5; c++) {
-    v = IR_values[c] - IR_WaterLevel;
-    if (v < 0) v = 0;
-    if (v > IR_max) IR_max = v;
-    total = total + v;
-
-    if (!found && last_v < IR_tresh && v > IR_tresh) {
-      pos_left = -12 + 16.0 * (c - 2) + 16.0 * (IR_tresh - last_v) / (v - last_v);
-      found = 1;
+  IRLine_t::IRLine_t()
+  {
+    IR_WaterLevel = 0;
+    IR_tresh = 512;
+    cross_tresh = 3;
+    black_cross_level = 2.8;
+    cross_total_tresh = 2500;
+  }
+  
+  void IRLine_t::calibrate(void)
+  {
+    
+  }
+  
+  
+  bool IRLine_t::calcIRLineEdgeLeft(void)
+  {
+    byte c;
+    bool found;
+    int v, last_v;;
+  
+    found = false;
+    IR_max = 0;
+    total = 0;
+    last_v = v = IR_values[0] - IR_WaterLevel;;
+    pos_left = 999;
+    for (c = 1; c < 5; c++) {
+      v = IR_values[c] - IR_WaterLevel;
+      if (v < 0) v = 0;
+      if (v > IR_max) IR_max = v;
+      total = total + v;
+  
+      if (!found && last_v < IR_tresh && v >= IR_tresh) {
+        pos_left = -0.0009684*(12 + 16.0 * (c - 3) + 16.0 * (IR_tresh - last_v) / (v - last_v)) - 0.002613;
+        found = true;
+      }
+      last_v = v;
     }
-    last_v = v;
+    return found;
   }
-}
-
-
-void IRLine_t::calcIRLineEdgeRight(void)
-{
-  byte c, found;
-  int v, last_v;
-
-  found = 0;
-  IR_max = 0;
-  pos_right = -2 * 16.0;
-  total = 0;
-  last_v = 0;
-  for (c = 0; c < 5; c++) {
-    v = IR_values[4 - c] - IR_WaterLevel;
-    if (v < 0) v = 0;
-    if (v > IR_max) IR_max = v;
-    total = total + v;
-
-    if (!found && last_v < IR_tresh && v > IR_tresh) {
-      pos_right = -(-12 + 16.0 * (c - 2) + 16.0 * (IR_tresh - last_v) / (v - last_v));
-      found = 1;
+  
+  
+  bool IRLine_t::calcIRLineEdgeRight(void)
+  {
+    byte c;
+    bool found;
+    int v, last_v;
+  
+    found = false;
+    IR_max = 0;
+    total = 0;
+    last_v = 0;
+    pos_right = 999;
+    for (c = 0; c < 5; c++) {
+      v = IR_values[c] - IR_WaterLevel;
+      if (v < 0) v = 0;
+      if (v > IR_max) IR_max = v;
+      total = total + v;
+  
+      if (!found && last_v > IR_tresh && v <= IR_tresh) {
+        pos_right = -0.001026*(-12 + 16.0 * (c - 3) + 16.0 * (IR_tresh - last_v) / (v - last_v)) + 0.001696;
+        found = true;
+      }
+      last_v = v;
     }
-    last_v = v;
+  
+    return found;
   }
   
-}
-
-
-
-void IRLine_t::calcCrosses(void)
-{
-  blacks = 0;
   
-  if (IR_max <= IR_tresh) {
-    cross_count = 0;
-    last_cross_count = 0;
-    return;
-  }
   
-  last_cross_count = cross_count;
-  
-  blacks = total / IR_max;
-  if (blacks > black_cross_level) {
-    cross_count++;  
-    if (cross_count > 32) cross_count = 32;
-    if (last_cross_count < cross_tresh && cross_count >= cross_tresh) {
-      crosses++;  
+  void IRLine_t::calcCrosses(void)
+  {
+    blacks = 0;
+    
+    if (IR_max <= IR_tresh) {
+      cross_count = 0;
+      last_cross_count = 0;
+      return;
     }
-  } else {
-    if (cross_count > 0) cross_count--;
+    
+    last_cross_count = cross_count;
+    
+    blacks = total / IR_max;
+    if (blacks > black_cross_level) {
+      cross_count++;  
+      if (cross_count > 32) cross_count = 32;
+      if (last_cross_count < cross_tresh && cross_count >= cross_tresh) {
+        crosses++;  
+      }
+    } else {
+      if (cross_count > 0) cross_count--;
+    }
+  
   }
-
-}
-
-/*
-void IRLine_t::calcIRLineCenter(void)
-{
-  byte c;
-  int v;
-
-  IR_pos = 0;
-  IR_total = 0;
-  for (c = 0; c < 5; c++) {
-    v = IR_values[c] - IR_WaterLevel;
-    if (v < 0) v = 0;
- 
-    IR_total = IR_total + v;
-    IR_pos = IR_pos + v * (c - 2) * 16.0;
+  
+  bool IRLine_t::line_marker(void)
+  {
+    byte c;
+    bool found = false;
+  
+    for (c = 0; c < IRSENSORS_COUNT; c++) {
+      if ((last_IR_values[c] < IR_tresh) & (last_IR_values[c] >= IR_tresh)) {
+  
+      }
+    }
+  /*
+  if 
+  TRESH_PB 
+  
+    for (c = 0; c < 5; c++) {
+      v = IR_values[c] - IR_WaterLevel;
+      if (v < 0) v = 0;
+  
+    }
+  */  
+  return true;
+  }  
+  
+  /*
+  void IRLine_t::calcIRLineCenter(void)
+  {
+    byte c;
+    int v;
+  
+    IR_pos = 0;
+    IR_total = 0;
+    for (c = 0; c < 5; c++) {
+      v = IR_values[c] - IR_WaterLevel;
+      if (v < 0) v = 0;
+   
+      IR_total = IR_total + v;
+      IR_pos = IR_pos + v * (c - 2) * 16.0;
+    }
+    if (IR_total > 0) IR_pos = IR_pos / IR_total;
   }
-  if (IR_total > 0) IR_pos = IR_pos / IR_total;
-}
-*/
+  */
+  

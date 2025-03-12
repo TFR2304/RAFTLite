@@ -64,8 +64,8 @@
     float dns;
   
     float dt;
-    float v, w;
-    float v_req, w_req;
+    float v, vn, w;
+    float v_req, vn_req, w_req;
     float dv_max, dw_max;
   
     float wheel_radius, wheel_dist, L1_L2;
@@ -85,13 +85,15 @@
     float p1_req;
     control_mode_t control_mode;
     float follow_v, follow_k;
-  
+
+    IRLine_t IRLine_Front, IRLine_Back, last_IRLine_Front, last_IRLine_Back;
+    IRLine_t IRLine;
     PID_t PID[NUM_WHEELS];
   
     int solenoid_PWM;
     int led;
   
-    IRLine_t IRLine;
+    //IRLine_t IRLine;
     float tof_dist, prev_tof_dist;
   
     int LastTouchSwitch, TouchSwitch;
@@ -101,10 +103,14 @@
     robot_t();
   
     void odometry(void);
-    void setRobotVW(float Vnom, float Wnom);
-  
+    void setRobotVW(float Vnom, float VNnom, float Wnom);
+    bool line_marker_front(void);
+    void localization(void); 
+    
     void accelerationLimit(void);
     void calcMotorsVoltage(void);
+    
+    void gotoXYTheta(float xf, float yf, float thf);/////
   
     void followLineRight(float Vnom, float K);
     void followLineLeft(float Vnom, float K);

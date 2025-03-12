@@ -26,38 +26,43 @@
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE. */
 
-#ifndef IRLINE_H
-#define IRLINE_H
-
-#include "Arduino.h"
-
-#define IRSENSORS_COUNT 5
-
-class IRLine_t
-{
-  public:
-    float pos_left, pos_right, total;
-    int IR_values[IRSENSORS_COUNT];
-    int IR_WaterLevel;
-    int IR_tresh, IR_max;
-
-    int crosses;
-    int cross_count, last_cross_count;
-    int cross_tresh;
-    int black_cross_level;
-
-    float blacks;
-
-    IRLine_t();
-    
-    void calibrate(void);
-    
-    void calcIRLineEdgeLeft(void);
-    void calcIRLineEdgeRight(void);
-    //void calcIRLineCenter(void);
-
-    void calcCrosses(void);
-
-};
-
-#endif // IRLINE_H
+  #ifndef IRLINE_H
+  #define IRLINE_H
+  
+  #include "Arduino.h"
+  
+  #define IRSENSORS_COUNT 5
+  
+  class IRLine_t
+  {
+    public:
+      float pos_left, pos_right, dist_center, total;
+      int IR_values[IRSENSORS_COUNT];
+      int last_IR_values[IRSENSORS_COUNT];
+      int IR_WaterLevel;
+      int IR_tresh, IR_max;
+  
+      int crosses;
+      int cross_count, last_cross_count;
+      int cross_tresh;
+      int black_cross_level;
+      int cross_total_tresh;
+  
+      float blacks;
+  
+      IRLine_t();
+      
+      void calibrate(void);
+      
+      bool calcIRLineEdgeLeft(void);
+      bool calcIRLineEdgeRight(void);
+      //void calcIRLineCenter(void);
+  
+      void calcCrosses(void);
+  
+      bool line_marker(void);
+  
+  };
+  
+  #endif // IRLINE_H
+  

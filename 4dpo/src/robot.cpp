@@ -29,7 +29,18 @@
 #include <Arduino.h>
 #include "robot.h"
 #include <math.h>
+#include <trajectories.h>
 
+
+#define TOL_FINDIST 0.01 
+#define DIST_DA 0.05
+#define THETA_DA 0.05
+#define TOL_FINTHETA 0.01
+#define VEL_LIN_NOM 0.2
+#define VEL_ANG_NOM 0.5
+
+#define TOL_TH_LOC 0.524 // 30 degres
+#define TOL_DIST_LOC 0.05
 
 robot_t robot;
 
@@ -138,10 +149,45 @@ void robot_t::odometry(void)
     rel_theta += dtheta;
 }
 
+void robot_t::localization(void)
+{
+float alfa;
 
-void robot_t::setRobotVW(float Vnom, float Wnom)
+robot.IRLine_Back.dist_center = 999; // 999 - no line detection
+if (robot.IRLine_Back.calcIRLineEdgeLeft() == true) {
+  robot.IRLine_Back.dist_center = robot.IRLine_Back.pos_left;
+  if (robot.IRLine_Back.calcIRLineEdgeRight() == true) robot.IRLine_Back.dist_center = (robot.IRLine_Back.pos_left + robot.IRLine_Back.pos_right)/2;
+} else {
+  if (robot.IRLine_Back.calcIRLineEdgeRight() == true) robot.IRLine_Back.dist_center = robot.IRLine_Back.pos_right;
+} 
+
+
+robot.IRLine_Front.dist_center = 999; // 999 - no line detection
+if (robot.IRLine_Front.calcIRLineEdgeLeft() == true) {
+  robot.IRLine_Front.dist_center = robot.IRLine_Front.pos_left;
+  if (robot.IRLine_Front.calcIRLineEdgeRight() == true) robot.IRLine_Front.dist_center = (robot.IRLine_Front.pos_left + robot.IRLine_Front.pos_right)/2;
+} else {
+  if (robot.IRLine_Front.calcIRLineEdgeRight() == true) robot.IRLine_Front.dist_center = robot.IRLine_Front.pos_right;
+} 
+
+if ((robot.IRLine_Front.dist_center != 999) && (robot.IRLine_Back.dist_center != 999)) {  // detection in both sensors
+  alfa = atan((robot.IRLine_Front.dist_center - robot.IRLine_Back.dist_center)/(0.24 +0.28));
+  //debug4 = RAD_TO_DEG*alfa;
+
+  if (abs(thetae - PI/2) < 0.524){
+    if (abs(xe -(-0.723)) < 0.05) {
+        xe = -0.723 + (tan(alfa)*(0.26) + robot.IRLine_Front.dist_center)*cos(alfa);
+    }
+  }
+}
+
+}
+
+
+void robot_t::setRobotVW(float Vnom, float VNnom, float Wnom)
 {
   v_req = Vnom;
+  vn_req = VNnom;
   w_req = Wnom;
 }
 
@@ -175,11 +221,15 @@ void robot_t::calcMotorsVoltage(void)
     
 
   } else if (control_mode == cm_kinematics) {
-    v1ref = v + w * wheel_dist / 2;
-    v2ref = v - w * wheel_dist / 2; 
+    v1ref = v - vn - w*L1_L2 / 2;
+    v2ref = v + vn + w*L1_L2 / 2;
+    v3ref = v + vn - w*L1_L2 / 2;
+    v4ref = v - vn + w*L1_L2 / 2;
     
     w1ref = v1ref / wheel_radius;
     w2ref = v2ref / wheel_radius;    
+    w3ref = v3ref / wheel_radius;
+    w4ref = v4ref / wheel_radius;     
   } else if (control_mode == cm_pos) {
     p1ref = p1_req;
     PID[0].last_pe = PID[0].pos_error;
@@ -234,20 +284,46 @@ void robot_t::calcMotorsVoltage(void)
 
 void robot_t::followLineRight(float Vnom, float K)
 {
-  w_req = K * IRLine.pos_right;
-  //w_req = w_req * fabs(w_req);
-  //v_req = fmax(0, Vnom - 0.1 * fabs(w_req));
-  v_req = Vnom;
+  vn_req = 0; 
+  w_req = -K * IRLine_Front.pos_right;
+  v_req = 0;
 }
 
 
 void robot_t::followLineLeft(float Vnom, float K)
 {
-  w_req = K * IRLine.pos_left;
-  //w_req = w_req * fabs(w_req);
-  //v_req = fmax(0, Vnom - 0.1 * fabs(w_req));
+  vn_req = 0;
+  w_req = -K * IRLine_Front.pos_left;;
   v_req = Vnom;
 }
+
+void robot_t::gotoXYTheta(float xf, float yf, float thf)
+{
+  float ang_target = atan2(yf-ye, xf-xe);
+  float error_dist = sqrt(sqr(xf-xe) + sqr(yf-ye));
+  float error_finalrot = normalize_angle(thf - thetae);
+  if (error_dist < TOL_FINDIST) {
+    v_req = 0;
+    vn_req = 0;
+    //at_target_pos = true;
+  } else if (error_dist < DIST_DA) {
+      v_req = (VEL_LIN_NOM/3)*cos(ang_target-thetae);
+      vn_req = (VEL_LIN_NOM/3)*sin(ang_target-thetae);
+  } else {
+      v_req = VEL_LIN_NOM*cos(ang_target-thetae);
+      vn_req = VEL_LIN_NOM*sin(ang_target-thetae);
+  }
+  if (abs(error_finalrot) < TOL_FINTHETA) {
+    w_req = 0;
+    //at_target_ang = true;
+  } else if (abs(error_finalrot) < THETA_DA) {
+      w_req = signal(error_finalrot)*VEL_ANG_NOM/3;
+  } else {
+      w_req = signal(error_finalrot)*VEL_ANG_NOM;
+  }  
+  debug = error_finalrot;
+}
+
 
 void robot_t::send_command(const char* command, float par)
 {

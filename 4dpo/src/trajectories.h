@@ -30,6 +30,8 @@ float dist(float x0, float y0, float x1, float y1);
 float normalize_angle(float ang);
 float dif_angle(float a0, float a1);
 
+float signal(float num);
+
 extern trajectory_t traj;
 
 #endif // trajectories_H

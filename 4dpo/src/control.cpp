@@ -87,7 +87,7 @@ class main_fsm_t: public state_machine_t
  // Actions in each state
     if (state == 0) {         // Robot Stoped            
       robot.solenoid_PWM = 0;
-      robot.setRobotVW(0, 0);
+      robot.setRobotVW(0, 0, 0);
 
     } else if (state == 1) {  // Go: Get first box
       robot.solenoid_PWM = 0;
@@ -99,11 +99,11 @@ class main_fsm_t: public state_machine_t
     
     } else if (state == 3) {  // Go back with the box
       robot.solenoid_PWM = 180;
-      robot.setRobotVW(-0.1, 0);
+      robot.setRobotVW(-0.1, 0, 0);
       
     } else if (state == 4) {  // Turn arround
       robot.solenoid_PWM = 180;
-      robot.setRobotVW(0, 2.5);
+      robot.setRobotVW(0, 0,2.5);
       
     } else if (state == 5) {  // long travel to the box final destination
       robot.solenoid_PWM = 180;
@@ -111,7 +111,7 @@ class main_fsm_t: public state_machine_t
       
     } else if (state == 6) {  // Advance a little then turn to place the box
       robot.solenoid_PWM = 180;
-      robot.setRobotVW(0.05, -2);
+      robot.setRobotVW(0.05, 0, -2);
       
     } else if (state == 7) {  
       robot.solenoid_PWM = 180;
@@ -119,11 +119,11 @@ class main_fsm_t: public state_machine_t
 
     } else if (state == 8) { // Drop the box and go back
       robot.solenoid_PWM = 0;
-      if (tis < 2.0) robot.setRobotVW(-0.1, 0);  // Dirty hack: a substate in a state
-      else robot.setRobotVW(0, 0);
+      if (tis < 2.0) robot.setRobotVW(-0.1,0, 0);  // Dirty hack: a substate in a state
+      else robot.setRobotVW(0,0, 0);
     
     } else if (state == 10) { // Test
-      robot.setRobotVW(0.1, 0);      
+      robot.setRobotVW(0.1,0, 0);      
 
     } else if (state == 100) {  // Control Stop
       robot.v_req = 0;
@@ -131,17 +131,17 @@ class main_fsm_t: public state_machine_t
 
     } else if (state == 101) {  // Option for remote control
       robot.control_mode = cm_kinematics;
-      robot.setRobotVW(robot.v_req, robot.w_req);
+      robot.setRobotVW(robot.v_req, robot.vn_req, robot.w_req);
 
     } else if (state == 102) {  // Option for remote PID control
       robot.control_mode = cm_pid;
 
     } else if (state == 199) {
-      /*robot.v_req = 0.1;   // Simple line follwower
-      robot.w_req = 4 * IRLine.IR_values[4] / 1024.0 
-                  + 2 * IRLine.IR_values[3] / 1024.0
-                  - 2 * IRLine.IR_values[1] / 1024.0
-                  - 4 * IRLine.IR_values[0] / 1024.0;*/
+      robot.v_req = 0.1;   // Simple line follwower
+      robot.w_req = 4 * robot.IRLine.IR_values[4] / 1024.0 
+                  + 2 * robot.IRLine.IR_values[3] / 1024.0
+                  - 2 * robot.IRLine.IR_values[1] / 1024.0
+                  - 4 * robot.IRLine.IR_values[0] / 1024.0;
 
     } else if (state == 200) {  // Direct stop
       robot.control_mode = cm_voltage;
@@ -173,7 +173,7 @@ class main_fsm_t: public state_machine_t
 
     } else if (state == 301)
     {
-      robot.followLineRight(1.5, robot.follow_v);
+      robot.followLineRight(robot.follow_v, robot.follow_k);
 
     } else if (state == mb_heat_motor) {
       robot.control_mode = cm_voltage;
