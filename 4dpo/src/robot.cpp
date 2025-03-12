@@ -239,10 +239,6 @@ void robot_t::calcMotorsVoltage(void)
     if((abs(PID[0].pos_error)<0.005)&&(fabs(w1ref < 0.015))) u1=0; //Cycle Oscillation Limiter
     else u1 = PID[0].calc(w1ref, w1e) + sign(w1ref) *  PID[0].ppars->dead_zone; 
   }
-    else if(control_mode == cm_IR){
-      followLineRight(1.5, follow_k);
-
-    }
 
   if (control_mode != cm_pos) {
     if (w1ref != 0) u1 = PID[0].calc(w1ref, w1e) + sign(w1ref) *  PID[0].ppars->dead_zone;
