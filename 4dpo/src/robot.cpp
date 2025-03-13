@@ -186,9 +186,9 @@ if ((robot.IRLine_Front.dist_center != 999) && (robot.IRLine_Back.dist_center !=
 
 void robot_t::setRobotVW(float Vnom, float VNnom, float Wnom)
 {
-  v_req = Vnom;
-  vn_req = VNnom;
-  w_req = Wnom;
+  v = Vnom;
+  vn = VNnom;
+  w = Wnom;
 }
 
 

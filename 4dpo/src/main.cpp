@@ -40,17 +40,17 @@ pico4drive_t pico4drive;
 
 #include "PicoEncoder.h"
 
-#define ENC1_PIN_A 2
-#define ENC1_PIN_B 3
+#define ENC1_PIN_A 8
+#define ENC1_PIN_B 9
 
-#define ENC2_PIN_A 4
-#define ENC2_PIN_B 5
+#define ENC2_PIN_A 6
+#define ENC2_PIN_B 7
 
-#define ENC3_PIN_A 6
-#define ENC3_PIN_B 7
+#define ENC3_PIN_A 4
+#define ENC3_PIN_B 5
 
-#define ENC4_PIN_A 8
-#define ENC4_PIN_B 9
+#define ENC4_PIN_A 2
+#define ENC4_PIN_B 3
 
 
 #define NUM_ENCODERS 4
@@ -313,9 +313,9 @@ void read_PIO_encoders(void)
   encoders[2].update();
   encoders[3].update(); 
   robot.enc1 = encoders[0].speed;
-  robot.enc2 = encoders[1].speed;
+  robot.enc2 = -encoders[1].speed;
   robot.enc3 = encoders[2].speed;
-  robot.enc4 = encoders[3].speed;
+  robot.enc4 = -encoders[3].speed;
 }
 
 
@@ -814,6 +814,10 @@ void loop()
     serial_commands.send_command("us", robot.u_sense);
 
     serial_commands.send_command("mode", robot.control_mode);
+
+    serial_commands.send_command("v", robot.v);
+    serial_commands.send_command("vn", robot.vn);
+    serial_commands.send_command("w", robot.w);
 
     serial_commands.send_command("kc", wheel_PID_pars.Kc);
     serial_commands.send_command("ki", wheel_PID_pars.Ki);
