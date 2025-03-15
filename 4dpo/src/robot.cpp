@@ -52,7 +52,7 @@ template <typename T> int sign(T val)
 robot_t::robot_t()
 {
   stoped = false;
-  wheel_dist = 0.01925;
+  wheel_dist = 0.1925;
   wheel_radius = 0.065/2;
   L1_L2 = 0.54;
   dv_max = 5;
@@ -119,9 +119,9 @@ void robot_t::odometry(void)
     v4e = w4e * wheel_radius;
   
     // Estimate robot speed
-    ve = (v1e + v2e + v3e + v4e) / 4.0;
-    vne = (-v1e + v2e + v3e - v4e) / 4.0;
-    we = (-v1e + v2e - v3e + v4e) / (2*L1_L2);
+    ve = (v3e + v4e + v1e + v2e) / 4.0; //(v1e + v2e + v3e + v4e) / 4.0;
+    vne = (-v3e + v4e + v1e - v2e) / 4.0; //(-v1e + v2e + v3e - v4e) / 4.0;
+    we = (-v3e + v4e - v1e + v2e) / (4*L1_L2); //(-v1e + v2e - v3e + v4e) / (2*L1_L2);
     
     // Estimate the distance and the turn angle
     ds = ve * dt;
@@ -186,9 +186,9 @@ if ((robot.IRLine_Front.dist_center != 999) && (robot.IRLine_Back.dist_center !=
 
 void robot_t::setRobotVW(float Vnom, float VNnom, float Wnom)
 {
-  v_req = Vnom;
-  vn_req = VNnom;
-  w_req = Wnom;
+  v = Vnom;
+  vn = VNnom;
+  w = Wnom;
 }
 
 
@@ -226,9 +226,9 @@ void robot_t::calcMotorsVoltage(void)
     v3ref = v + vn - w*L1_L2 / 2;
     v4ref = v - vn + w*L1_L2 / 2;
     
-    w1ref = v1ref / wheel_radius;
+    w1ref = -(v1ref / wheel_radius);
     w2ref = v2ref / wheel_radius;    
-    w3ref = v3ref / wheel_radius;
+    w3ref = -(v3ref / wheel_radius);
     w4ref = v4ref / wheel_radius;     
   } else if (control_mode == cm_pos) {
     p1ref = p1_req;

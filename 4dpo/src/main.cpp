@@ -191,10 +191,10 @@ void process_command(command_frame_t frame)
     robot.w2_req = frame.value;
 
   } else if (frame.command_is("w3")) { 
-    robot.w3_req = frame.value;
+    robot.w3_req = -frame.value;
 
   } else if (frame.command_is("w4")) {
-    robot.w4_req = -frame.value;
+    robot.w4_req = frame.value;
 
   } else if (frame.command_is("p1")) {
     robot.p1_req =frame.value;
@@ -799,11 +799,12 @@ void loop()
     serial_commands.send_command("Vbat", pico4drive.battery_voltage);
 
     serial_commands.send_command("ve", robot.ve);
+    serial_commands.send_command("vne", robot.vne);
     serial_commands.send_command("we", robot.we);
 
-    serial_commands.send_command("w1", robot.w1e);
+    serial_commands.send_command("w1", (-robot.w1e));
     serial_commands.send_command("w2", robot.w2e);
-    serial_commands.send_command("w3", robot.w3e);
+    serial_commands.send_command("w3", (-robot.w3e));
     serial_commands.send_command("w4", robot.w4e);
 
     serial_commands.send_command("p1", robot.p1e);
