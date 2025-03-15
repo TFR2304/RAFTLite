@@ -61,7 +61,7 @@ void PID_t::init_pars(PID_pars_t* appars)
 float PID_t::calc(float new_y_ref, float new_y)
 {
   float de, dy_ref, y_filter;
-  float a0 = 0.5988,  b0 = 0.4012; //Tset=0.25s & tau=0.2s
+  float a0 = 0.5988,  b0 = 0.4012; //Tset=0.25s & tau=0.2s a0 = 0.5988,  b0 = 0.4012
   y = new_y;
   dy_ref = (new_y_ref - y_ref) / ppars->dt;
   y_ref = new_y_ref;

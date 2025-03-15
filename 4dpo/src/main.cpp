@@ -40,17 +40,17 @@ pico4drive_t pico4drive;
 
 #include "PicoEncoder.h"
 
-#define ENC1_PIN_A 8
-#define ENC1_PIN_B 9
+#define ENC1_PIN_A 2
+#define ENC1_PIN_B 3
 
-#define ENC2_PIN_A 6
-#define ENC2_PIN_B 7
+#define ENC2_PIN_A 4
+#define ENC2_PIN_B 5
 
-#define ENC3_PIN_A 4
-#define ENC3_PIN_B 5
+#define ENC3_PIN_A 6
+#define ENC3_PIN_B 7
 
-#define ENC4_PIN_A 2
-#define ENC4_PIN_B 3
+#define ENC4_PIN_A 8
+#define ENC4_PIN_B 9
 
 
 #define NUM_ENCODERS 4
