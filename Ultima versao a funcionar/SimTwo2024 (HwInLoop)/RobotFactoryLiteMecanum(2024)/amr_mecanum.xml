@@ -1,0 +1,288 @@
+<?xml version="1.0" ?>
+<robot>
+  <defines>
+
+  <!-- Robot Dimensions -->
+    <const name='RobotWidth' value='0.16'/>
+    <const name='RobotLength' value='0.30'/>
+    <const name='RobotThickness' value='0.025'/>
+    <const name='RobotHeight' value='0.051'/>
+    <const name='RobotMass' value='5'/>
+    <const name='WheelClearance' value='0.015'/>
+    <const name='WheelFloorClearance' value='0.005'/>
+
+
+        <!-- Wheels 1 0.25 1e-2 -->
+    <const name='surface_mu' value='1'/>
+    <const name='surface_mu2' value='0.25'/>
+    <const name='surface_soft' value='1e-2'/>
+
+
+    <const name='WheelToCenter' value='RobotWidth/2 + WheelClearance'/>
+    <const name='MotorPosX' value='RobotLength/2 - 0.05'/>
+    <const name='CenterMotorToFront' value='RobotLength/2 - MotorPosX'/>
+    <const name='CasterToBack' value='0.07'/>
+
+     <!--
+    <const name='ForkWidth' value='0.06'/>   
+    <const name='ForkLength' value='0.1'/>  
+    <const name='ForkThickness' value='0.002'/>
+    <const name='ForkMass' value='0.1'/>
+    <const name='ForkMin' value='0.005'/>
+    <const name='ForkMax' value='0.05'/>
+    -->
+    
+  <!-- Motor Contants --> 
+    <const name='MotorDiameter' value='0.028'/>
+    <const name='MotorLength' value='0.075'/>
+    <const name='MotorMass' value='0.027'/>
+    
+  <!-- Wheel Contants -->
+    <const name='WheelDiameter' value='0.065'/>
+    <const name='WheelThickness' value='0.03'/>
+    <const name='WheelMass' value='0.25'/>
+
+  <!--Calculated Measures  -->
+    <const name='BracketHeight' value='RobotHeight-RobotThickness-(WheelDiameter/2+MotorDiameter/2)'/>   
+
+  </defines>
+   
+  <solids>
+  
+    <cuboid>
+      <ID value='BasePlate'/>
+      <mass value='RobotMass'/>                                        
+      <size x='RobotLength' y='RobotWidth' z='RobotThickness'/>
+      <pos x='0' y='0' z='RobotHeight-RobotThickness/2'/> 
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='20' g='20' b='20'/>
+    </cuboid>
+
+     <cylinder>
+      <ID value='WheelLeftFront' kind='mecanumleft'/>
+      <surface mu='surface_mu' mu2='surface_mu2' softness='surface_soft'/>
+      <mass value='WheelMass'/>
+      <mesh file='mecanum_wheel_left.stl'  shadow='0' scale='0.00065'/>
+      <size x='WheelDiameter/2' y='WheelDiameter/2' z='WheelThickness'/>
+      <pos x='MotorPosX' y='WheelToCenter' z='WheelDiameter/2'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+    </cylinder>
+
+    <cylinder>
+      <ID value='WheelRightFront' kind='mecanumright'/>
+      <surface mu='surface_mu' mu2='surface_mu2' softness='surface_soft'/>
+      <mass value='WheelMass'/>
+      <mesh file='mecanum_wheel_right.stl'  shadow='0' scale='0.00065'/>
+      <size x='WheelDiameter/2' y='WheelDiameter/2' z='WheelThickness'/>
+      <pos x='MotorPosX' y='-WheelToCenter' z='WheelDiameter/2'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+    </cylinder>
+
+    <cylinder>
+      <ID value='WheelLeftBack' kind='mecanumright'/>
+      <surface mu='surface_mu' mu2='surface_mu2' softness='surface_soft'/>
+      <mass value='WheelMass'/>
+      <mesh file='mecanum_wheel_right.stl'  shadow='0' scale='0.00065'/>
+      <size x='WheelDiameter/2' y='WheelDiameter/2' z='WheelThickness'/>
+      <pos x='-MotorPosX' y='WheelToCenter' z='WheelDiameter/2'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+    </cylinder>
+
+    <cylinder>
+      <ID value='WheelRightBack' kind='mecanumleft'/>
+      <surface mu='surface_mu' mu2='surface_mu2' softness='surface_soft'/>
+      <mass value='WheelMass'/>
+      <mesh file='mecanum_wheel_left_c.stl'  shadow='0' scale='0.00065'/>
+      <size x='WheelDiameter/2' y='WheelDiameter/2' z='WheelThickness'/>
+      <pos x='-MotorPosX' y='-WheelToCenter' z='WheelDiameter/2'/>
+      <rot_deg x='90' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+    </cylinder>
+
+
+  </solids>
+
+  <shells>
+
+
+  </shells>
+
+  <articulations>
+    
+    <default>
+      <ndraw radius='0.005' height='0.1' rgb24='8F8F8F'/>
+      <motor ri='6.1' li='3.4e-3' ki='0.2585' vmax='8.2' imax='3' active='1'/>
+      <gear ratio='1'/>
+      <friction bv='0.0012' fc='0.0169'/>
+      <encoder ppr='3840' mean='0' stdev='0'/>
+      <controller mode='pidspeed' kp='0.5' ki='2.5/50' kd='0' kf='0.8' active='1' period='10'/>
+      <spring k='0' zeropos='0'/>
+    </default>
+
+    <joint>
+      <ID value='LeftAxisFront'/>
+      <connect B1='WheelLeftFront' B2='BasePlate'/>
+      <pos x='MotorPosX' y='0' z='WheelDiameter/2'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+    </joint>
+
+    <joint>
+      <ID value='RightAxisFront'/>
+      <connect B1='WheelRightFront' B2='BasePlate'/>
+      <pos x='MotorPosX' y='0' z='WheelDiameter/2'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+    </joint>
+
+    <joint>
+      <ID value='LeftAxisBack'/>
+      <connect B1='WheelLeftBack' B2='BasePlate'/>
+      <pos x='-MotorPosX' y='0' z='WheelDiameter/2'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+    </joint>
+
+    <joint>
+      <ID value='RightAxisBack'/>
+      <connect B1='WheelRightBack' B2='BasePlate'/>
+      <pos x='-MotorPosX' y='0' z='WheelDiameter/2'/>
+      <axis x='0' y='1' z='0'/>
+      <type value='Hinge'/>
+    </joint>
+
+
+  </articulations>
+
+  <defines>
+    <!-- Sensor "dimensions"  -->
+    <const name='LineSensorOffsetX' value='RobotLength/2'/>
+    <const name='LineSensorYSpace' value='0.016'/>
+    <const name='LineSensorOffsetZ' value='-RobotHeight + 0.03'/>
+    <const name='LineSensorBeamWidth' value='0.008'/>
+  </defines>
+
+  <sensors>
+
+     <floorline>
+      <ID value='Line0'/>
+      <beam length='0.05' initial_width='LineSensorBeamWidth' final_width='LineSensorBeamWidth'/>
+      <tag value='black'/>
+      <pos x='LineSensorOffsetX' y='2 * LineSensorYSpace' z='LineSensorOffsetZ'/>
+      <rot_deg x='0' y='120' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </floorline>
+
+    <floorline>
+      <ID value='Line1'/>
+      <beam length='0.05' initial_width='LineSensorBeamWidth' final_width='LineSensorBeamWidth'/>
+      <tag value='black'/>
+      <pos x='LineSensorOffsetX' y='1 * LineSensorYSpace' z='LineSensorOffsetZ'/>
+      <rot_deg x='0' y='120' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </floorline>
+
+    <floorline>
+      <ID value='Line2'/>
+      <beam length='0.05' initial_width='LineSensorBeamWidth' final_width='LineSensorBeamWidth'/>
+      <tag value='black'/>
+      <pos x='LineSensorOffsetX' y='0' z='LineSensorOffsetZ'/>
+      <rot_deg x='0' y='120' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </floorline>
+
+    <floorline>
+      <ID value='Line3'/>
+      <beam length='0.05' initial_width='LineSensorBeamWidth' final_width='LineSensorBeamWidth'/>
+      <tag value='black'/>
+      <pos x='LineSensorOffsetX' y='-1 * LineSensorYSpace' z='LineSensorOffsetZ'/>
+      <rot_deg x='0' y='120' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </floorline>
+
+    <floorline>
+      <ID value='Line4'/>
+      <beam length='0.05' initial_width='LineSensorBeamWidth' final_width='LineSensorBeamWidth'/>
+      <tag value='black'/>
+      <pos x='LineSensorOffsetX' y='-2 * LineSensorYSpace' z='LineSensorOffsetZ'/>
+      <rot_deg x='0' y='120' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </floorline>
+
+
+
+     <floorline>
+      <ID value='Line5'/>
+      <beam length='0.05' initial_width='LineSensorBeamWidth' final_width='LineSensorBeamWidth'/>
+      <tag value='black'/>
+      <pos x='LineSensorOffsetX -0.16' y='2 * LineSensorYSpace' z='LineSensorOffsetZ'/>
+      <rot_deg x='0' y='120' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </floorline>
+
+    <floorline>
+      <ID value='Line6'/>
+      <beam length='0.05' initial_width='LineSensorBeamWidth' final_width='LineSensorBeamWidth'/>
+      <tag value='black'/>
+      <pos x='LineSensorOffsetX -0.16' y='1 * LineSensorYSpace' z='LineSensorOffsetZ'/>
+      <rot_deg x='0' y='120' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </floorline>
+
+    <floorline>
+      <ID value='Line7'/>
+      <beam length='0.05' initial_width='LineSensorBeamWidth' final_width='LineSensorBeamWidth'/>
+      <tag value='black'/>
+      <pos x='LineSensorOffsetX -0.16' y='0' z='LineSensorOffsetZ'/>
+      <rot_deg x='0' y='120' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </floorline>
+
+    <floorline>
+      <ID value='Line8'/>
+      <beam length='0.05' initial_width='LineSensorBeamWidth' final_width='LineSensorBeamWidth'/>
+      <tag value='black'/>
+      <pos x='LineSensorOffsetX -0.16' y='-1 * LineSensorYSpace' z='LineSensorOffsetZ'/>
+      <rot_deg x='0' y='120' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </floorline>
+
+    <floorline>
+      <ID value='Line9'/>
+      <beam length='0.05' initial_width='LineSensorBeamWidth' final_width='LineSensorBeamWidth'/>
+      <tag value='black'/>
+      <pos x='LineSensorOffsetX -0.16' y='-2 * LineSensorYSpace' z='LineSensorOffsetZ'/>
+      <rot_deg x='0' y='120' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+    </floorline>
+
+
+    <IRSharp>
+      <!--<absolute_coords/>-->
+      <ID value='MicroSwitch'/>
+      <beam length='0.01' initial_width='0.004' final_width='0.004'/>
+      <pos x='RobotLength/2' y='-0.0165' z='0.007 -0.02'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='0' g='0' b='200'/>
+    </IRSharp>
+
+    <solenoid>
+      <ID value='solenoid1'/>
+      <beam length='0.04' initial_width='0.011' final_width='0.011'/>
+      <pos x='RobotLength/2' y='0' z='RobotHeight - 0.07'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <tag value='00'/>
+      <force fmax='10' k2='0.5'/>
+      <color_rgb r='0' g='255' b='0'/>
+    </solenoid>
+
+  </sensors>
+
+
+
+     
+</robot>
+    

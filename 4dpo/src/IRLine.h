@@ -40,7 +40,10 @@
       int IR_values[IRSENSORS_COUNT];
       int last_IR_values[IRSENSORS_COUNT];
       int IR_WaterLevel;
+      int IR_tot_tresh;
       int IR_tresh, IR_max;
+      int IR_pos;
+      int IR_total ;
   
       int crosses;
       int cross_count, last_cross_count;
@@ -56,7 +59,8 @@
       
       bool calcIRLineEdgeLeft(void);
       bool calcIRLineEdgeRight(void);
-      //void calcIRLineCenter(void);
+      void calcIRLineCenter(void);
+      bool SenseIRLineCrosses(void);
   
       void calcCrosses(void);
   

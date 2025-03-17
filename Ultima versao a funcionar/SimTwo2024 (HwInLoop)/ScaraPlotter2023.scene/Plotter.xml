@@ -1,0 +1,124 @@
+<?xml version="1.0" ?>
+<robot>
+  <kind value='Plotter'/>
+  <defines>
+    <const name='L1' value='0.7'/>
+    <const name='L2' value='0.5'/>
+
+    <const name='TableX' value='1.2'/>
+    <const name='TableY' value='1.2'/>
+  </defines>
+
+  <solids>
+    <cuboid>
+      <ID value='Base'/>
+      <mass value='2'/>
+      <size x='TableX' y='TableY' z='0.1'/>
+      <pos x='TableX/2' y='Tabley/2' z='0.05'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+      <canvas width='256' heigth='256'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='Link1'/>
+      <mass value='0.2'/>
+      <size x='L1' y='0.04' z='0.04'/>
+      <pos x='L1/2' y='0' z='0.3'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+    </cuboid>
+    
+    <cuboid>
+      <ID value='Link2'/>
+      <mass value='0.2'/>
+      <size x='L2' y='0.04' z='0.04'/>
+      <pos x='L1 + L2/2' y='0' z='0.26'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+    </cuboid>
+
+    <cylinder>
+      <ID value='Pen'/>
+      <mass value='0.1'/>
+      <size radius='0.01' z='0.05'/>
+      <pos x='L1 + L2' y='0' z='0.25'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='128' g='128' b='128'/>
+    </cylinder>
+
+  </solids>
+
+  <articulations>
+    <default>
+      <draw radius='0.005' height='0.1' rgb24='8F0000'/>
+      <motor ri='0.12' ki='0.56' vmax='24' imax='20' active='1'/>
+      <gear ratio='1'/>
+      <friction bv='1e-1' fc='3e-2'/>
+      <encoder ppr='1000' mean='0' stdev='0'/>
+      <spring k='0' zeropos='0'/>
+
+    </default>
+
+    <joint>
+      <draw radius='0.04' height='0.5' rgb24='808080'/>
+      <ID value='Joint1'/>
+      <pos x='0' y='0' z='0.3'/>
+      <axis x='0' y='0' z='-1'/>
+      <connect B1='Base' B2='Link1'/>
+      <nolimits Min='-1' Max='1'/>
+      <type value='Hinge'/>
+      <controller mode='pidposition' kp='1' ki='0' kd='0' kf='0' active='1' period='10'/>
+    </joint>
+
+    <joint>
+      <draw radius='0.02' height='0.08' rgb24='808080'/>
+      <ID value='Joint2'/>
+      <pos x='L1' y='0' z='0.28'/>
+      <axis x='0' y='0' z='-1'/>
+      <connect B1='Link1' B2='Link2'/>
+      <nolimits Min='-1' Max='1'/>
+      <controller mode='pidposition' kp='1' ki='0' kd='0' kf='0' active='1' period='10'/>
+      <type value='Hinge'/>
+    </joint>
+
+    <joint>
+      <ID value='SlideZ'/>
+      <pos x='L1 + L2' y='0' z='0.3'/>
+      <axis x='0' y='0' z='1'/>
+      <connect B1='Link2' B2='Pen'/>
+      <limits Min='-0.1' Max='0.12'/>
+      <type value='Slider'/>
+      <controller mode='pidposition' kp='1' ki='0' kd='0' kf='0.0' active='1' period='10'/>
+    </joint>
+
+    <joint>
+      <ID value='RotUp'/>
+      <pos x='0' y='0' z='0.02'/>
+      <axis x='1' y='0' z='0'/>
+      <connect B1='world' B2='Base'/>
+      <limits Min='0' Max='90'/>
+      <type value='Hinge'/>
+
+      <draw radius='0.005' height='0.1' rgb24='8F0000'/>
+      <motor ri='0.1' ki='0.56' vmax='24' imax='40' active='1'/>
+      <gear ratio='1'/>
+      <controller mode='pidposition' kp='20' ki='0' kd='200' kf='0.0' active='1' period='10'/>
+    </joint>
+
+
+  </articulations>
+
+  <sensors>
+    <pentip>
+      <solid id='Pen'/>
+      <beam length='0.02' initial_width='0.006' final_width='0.006'/>
+      <pos x='0' y='0' z='-0.02'/>
+      <rot_deg x='0' y='90' z='0'/>
+      <color_rgb r='128' g='0' b='0'/>
+      <period value='0.002'/>
+    </pentip>
+  </sensors>
+
+</robot>
+

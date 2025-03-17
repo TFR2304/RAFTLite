@@ -153,33 +153,62 @@ void robot_t::localization(void)
 {
 float alfa;
 
-robot.IRLine_Back.dist_center = 999; // 999 - no line detection
-if (robot.IRLine_Back.calcIRLineEdgeLeft() == true) {
-  robot.IRLine_Back.dist_center = robot.IRLine_Back.pos_left;
-  if (robot.IRLine_Back.calcIRLineEdgeRight() == true) robot.IRLine_Back.dist_center = (robot.IRLine_Back.pos_left + robot.IRLine_Back.pos_right)/2;
-} else {
-  if (robot.IRLine_Back.calcIRLineEdgeRight() == true) robot.IRLine_Back.dist_center = robot.IRLine_Back.pos_right;
-} 
+// Line Crosses must be first to calculate variable "total" and "last_total"
+if (robot.IRLine_Front.SenseIRLineCrosses() == true) {
+  if  ((abs(xe -(-0.724)) < TOL_DIST_LOC) && (abs(thetae - PI/2) < TOL_TH_LOC/3)) {
+    // CAUTION! difference between marks must be greater than TOL_DIST_LOC
+    if (abs(ye -(-0.265)) < TOL_DIST_LOC) ye = -0.265;
+    if (abs(ye -(-0.237)) < TOL_DIST_LOC) ye = -0.237;
+    if (abs(ye -(-0.116)) < TOL_DIST_LOC) ye = -0.116;
+    if (abs(ye -(-0.083)) < TOL_DIST_LOC) ye = -0.083;
+    if (abs(ye -0.255) < TOL_DIST_LOC) ye = 0.255;
+    if (abs(ye -0.285) < TOL_DIST_LOC) ye = 0.285;
+  }
+}
 
+if (robot.IRLine_Back.SenseIRLineCrosses() == true) {
+  if  ((abs(xe -(-0.724)) < TOL_DIST_LOC) && (abs(thetae - PI/2) < TOL_TH_LOC/3)){
+    // CAUTION! difference between marks must be greater than TOL_DIST_LOC
+    if (abs(ye -(-0.308)) < TOL_DIST_LOC) ye = -0.308;
+    if (abs(ye -(-0.279)) < TOL_DIST_LOC) ye = -0.279;
+    if (abs(ye -(-0.083)) < TOL_DIST_LOC) ye = -0.083;
+    if (abs(ye -(-0.057)) < TOL_DIST_LOC) ye = -0.057;
+    if (abs(ye -0.063) < TOL_DIST_LOC) ye = 0.063;
+    if (abs(ye -0.096) < TOL_DIST_LOC) ye = 0.096;
+  }
+}
+
+robot.IRLine_Back.dist_center = 999; // 999 - no line detection
+if (robot.IRLine_Back.total < robot.IRLine_Back.cross_total_tresh ) {// near crosses! Invalid Edges!
+  if (robot.IRLine_Back.calcIRLineEdgeLeft() == true) {
+    robot.IRLine_Back.dist_center = robot.IRLine_Back.pos_left;
+    if (robot.IRLine_Back.calcIRLineEdgeRight() == true) robot.IRLine_Back.dist_center = (robot.IRLine_Back.pos_left + robot.IRLine_Back.pos_right)/2;
+  } else {
+    if (robot.IRLine_Back.calcIRLineEdgeRight() == true) robot.IRLine_Back.dist_center = robot.IRLine_Back.pos_right;
+  } 
+}
 
 robot.IRLine_Front.dist_center = 999; // 999 - no line detection
-if (robot.IRLine_Front.calcIRLineEdgeLeft() == true) {
-  robot.IRLine_Front.dist_center = robot.IRLine_Front.pos_left;
-  if (robot.IRLine_Front.calcIRLineEdgeRight() == true) robot.IRLine_Front.dist_center = (robot.IRLine_Front.pos_left + robot.IRLine_Front.pos_right)/2;
-} else {
-  if (robot.IRLine_Front.calcIRLineEdgeRight() == true) robot.IRLine_Front.dist_center = robot.IRLine_Front.pos_right;
-} 
+if (robot.IRLine_Front.total < robot.IRLine_Front.cross_total_tresh ) {// near crosses! Invalid Edges!
+  if (robot.IRLine_Front.calcIRLineEdgeLeft() == true) {
+    robot.IRLine_Front.dist_center = robot.IRLine_Front.pos_left;
+    if (robot.IRLine_Front.calcIRLineEdgeRight() == true) robot.IRLine_Front.dist_center = (robot.IRLine_Front.pos_left + robot.IRLine_Front.pos_right)/2;
+  } else {
+    if (robot.IRLine_Front.calcIRLineEdgeRight() == true) robot.IRLine_Front.dist_center = robot.IRLine_Front.pos_right;
+  } 
+}
 
 if ((robot.IRLine_Front.dist_center != 999) && (robot.IRLine_Back.dist_center != 999)) {  // detection in both sensors
-  alfa = atan((robot.IRLine_Front.dist_center - robot.IRLine_Back.dist_center)/(0.24 +0.28));
-  //debug4 = RAD_TO_DEG*alfa;
+  alfa = atan((robot.IRLine_Front.dist_center - robot.IRLine_Back.dist_center)/D12);
 
-  if (abs(thetae - PI/2) < 0.524){
-    if (abs(xe -(-0.723)) < 0.05) {
-        xe = -0.723 + (tan(alfa)*(0.26) + robot.IRLine_Front.dist_center)*cos(alfa);
+  if (abs(thetae - PI/2) < TOL_TH_LOC){
+    if (abs(xe -(-0.724)) < TOL_DIST_LOC) {
+        xe = -0.724 + (robot.IRLine_Front.dist_center + tan(alfa)*(-(D12 + D2z)))*cos(alfa);
+        thetae = PI/2 - alfa; 
     }
   }
 }
+
 
 }
 
@@ -189,6 +218,8 @@ void robot_t::setRobotVW(float Vnom, float VNnom, float Wnom)
   v = Vnom;
   vn = VNnom;
   w = Wnom;
+
+
 }
 
 

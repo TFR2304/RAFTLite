@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<sheet>
+  <columns>
+    <defaultcol width="50" />
+    <col num="1" width="59" />
+    <col num="2" width="52" />
+    <col num="3" width="55" />
+    <col num="5" width="46" />
+    <col num="6" width="59" />
+    <col num="7" width="52" />
+    <col num="8" width="53" />
+    <col num="9" width="36" />
+    <col num="10" width="47" />
+    <col num="11" width="80" />
+    <col num="12" width="94" />
+    <col num="13" width="53" />
+  </columns>
+  <cells>
+    <cell r="5" c="0" text="5" />
+    <cell r="4" c="6" text="[Start Log]" />
+    <cell r="1" c="6" text="[Manual]" />
+    <cell r="1" c="7" text="[Remote]" />
+    <cell r="1" c="8" text="[Script]" />
+    <cell r="2" c="6" text="Manual" />
+    <cell r="1" c="1" text="V" />
+    <cell r="2" c="1" text="Vn" />
+    <cell r="3" c="1" text="w" />
+    <cell r="5" c="1" text="w1" />
+    <cell r="6" c="1" text="w2" />
+    <cell r="7" c="1" text="w3" />
+    <cell r="8" c="1" text="w2" />
+    <cell r="1" c="2" text="0.000" />
+    <cell r="2" c="2" text="0.000" />
+    <cell r="3" c="2" text="0.001" />
+    <cell r="5" c="2" text="0.011" />
+    <cell r="6" c="2" text="-0.001" />
+    <cell r="7" c="2" text="0.023" />
+    <cell r="8" c="2" text="0.034" />
+    <cell r="4" c="7" text="[Stop Log]" />
+    <cell r="4" c="8" text="[Save Log]" />
+    <cell r="1" c="5" text="Control:" />
+    <cell r="4" c="5" text="Log" />
+    <cell r="5" c="6" text="Off" />
+    <cell r="1" c="3" text="16" />
+    <cell r="7" c="6" text="38" />
+    <cell r="11" c="3" text="[Robot]" />
+    <cell r="11" c="4" text="[Part1]" />
+    <cell r="11" c="5" text="[Part2]" />
+    <cell r="11" c="6" text="[Part3]" />
+    <cell r="11" c="7" text="[Part4]" />
+    <cell r="12" c="1" text="X" />
+    <cell r="13" c="1" text="Y" />
+    <cell r="14" c="1" text="Theta" />
+    <cell r="12" c="3" text="-0.68" />
+    <cell r="13" c="3" text="-0.40" />
+    <cell r="14" c="3" text="90" />
+    <cell r="12" c="4" text="-0.695" />
+    <cell r="12" c="5" text="-0.545" />
+    <cell r="12" c="6" text="-0.395" />
+    <cell r="12" c="7" text="-0.245" />
+    <cell r="13" c="5" text="0.53" />
+    <cell r="13" c="4" text="0.53" />
+    <cell r="14" c="6" text="0" />
+    <cell r="13" c="6" text="0.53" />
+    <cell r="13" c="7" text="0.53" />
+    <cell r="14" c="4" text="0" />
+    <cell r="14" c="5" text="0" />
+    <cell r="14" c="7" text="0" />
+    <cell r="15" c="5" text="[Type]" />
+    <cell r="15" c="4" text="[Type]" />
+    <cell r="15" c="6" text="[Type]" />
+    <cell r="15" c="7" text="[Type]" />
+    <cell r="15" c="2" text="0" />
+    <cell r="15" c="1" text="Sol" />
+    <cell r="16" c="1" text="Touch" />
+    <cell r="16" c="2" text="0" />
+    <cell r="12" c="2" text="-0.6" />
+    <cell r="13" c="2" text="-0.39" />
+    <cell r="14" c="2" text="91.77" />
+  </cells>
+</sheet>

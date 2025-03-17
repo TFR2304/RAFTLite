@@ -43,6 +43,24 @@
     
   }
   
+  bool IRLine_t::SenseIRLineCrosses(void)
+{
+  bool found;
+  byte c;
+  int total, last_total;
+
+  found = false;
+  total = 0;
+  last_total = 0;
+  for (c = 0; c < 5; c++) {
+      last_total += last_IR_values[c];
+      total += IR_values[c]; 
+      if (((last_total <= IR_tot_tresh) && (total > IR_tot_tresh)) || ((last_total >= IR_tot_tresh) && (total < IR_tot_tresh))) {
+        found = true;
+      }
+  }
+  return found;
+}
   
   bool IRLine_t::calcIRLineEdgeLeft(void)
   {
@@ -148,7 +166,7 @@
   return true;
   }  
   
-  /*
+  
   void IRLine_t::calcIRLineCenter(void)
   {
     byte c;
@@ -165,5 +183,4 @@
     }
     if (IR_total > 0) IR_pos = IR_pos / IR_total;
   }
-  */
   

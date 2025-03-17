@@ -62,6 +62,8 @@
     float rel_s, rel_theta, rel_ns;
     float xe, ye, thetae;
     float dns;
+
+    float D12, D2z;
   
     float dt;
     float v, vn, w;

@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<scene>
+  <robot>
+    <ID name='Plotter'/>
+    <pos x='0' y='0' z='0'/>
+    <rot_deg z='0'/>
+
+    <body file='Plotter.xml'/>
+  </robot>
+</scene>

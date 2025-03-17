@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<things>
+
+
+
+<cuboid>
+  <ID value='Body'/>
+  <mass value='10'/>
+  <!-- size x = sqrt(I*2/m) = sqrt(0.704*2/27) -->
+  <size x='0.1' y='0.1' z='0.06'/>
+  <pos x='5' y='0' z='0.03'/>
+  <!--<rot_deg x='0' y='0' z='0'/>-->
+  <color_rgb r='200' g='200' b='200'/>
+  <!--<texture name='MatFeup' scale='2'/>-->
+</cuboid>
+
+
+
+
+
+</things>
