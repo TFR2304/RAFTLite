@@ -40,17 +40,17 @@ pico4drive_t pico4drive;
 
 #include "PicoEncoder.h"
 
-#define ENC1_PIN_A 8
-#define ENC1_PIN_B 9
+#define ENC1_PIN_A 2
+#define ENC1_PIN_B 3
 
-#define ENC2_PIN_A 6
-#define ENC2_PIN_B 7
+#define ENC2_PIN_A 4
+#define ENC2_PIN_B 5
 
-#define ENC3_PIN_A 4
-#define ENC3_PIN_B 5
+#define ENC3_PIN_A 6
+#define ENC3_PIN_B 7
 
-#define ENC4_PIN_A 2
-#define ENC4_PIN_B 3
+#define ENC4_PIN_A 8
+#define ENC4_PIN_B 9
 
 
 #define NUM_ENCODERS 4
@@ -191,10 +191,10 @@ void process_command(command_frame_t frame)
     robot.w2_req = frame.value;
 
   } else if (frame.command_is("w3")) { 
-    robot.w3_req = frame.value;
+    robot.w3_req = -frame.value;
 
   } else if (frame.command_is("w4")) {
-    robot.w4_req = -frame.value;
+    robot.w4_req = frame.value;
 
   } else if (frame.command_is("p1")) {
     robot.p1_req =frame.value;
@@ -799,11 +799,12 @@ void loop()
     serial_commands.send_command("Vbat", pico4drive.battery_voltage);
 
     serial_commands.send_command("ve", robot.ve);
+    serial_commands.send_command("vne", robot.vne);
     serial_commands.send_command("we", robot.we);
 
-    serial_commands.send_command("w1", robot.w1e);
+    serial_commands.send_command("w1", (-robot.w1e));
     serial_commands.send_command("w2", robot.w2e);
-    serial_commands.send_command("w3", robot.w3e);
+    serial_commands.send_command("w3", (-robot.w3e));
     serial_commands.send_command("w4", robot.w4e);
 
     serial_commands.send_command("p1", robot.p1e);
