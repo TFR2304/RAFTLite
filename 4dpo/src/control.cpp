@@ -175,7 +175,12 @@ class main_fsm_t: public state_machine_t
     {
       robot.followLineRight(robot.follow_v, robot.follow_k);
 
-    } else if (state == mb_heat_motor) {
+    } 
+   else if (state == 302)
+  {
+    robot.followLineRight(robot.follow_v, robot.follow_k);
+
+  }else if (state == mb_heat_motor) {
       robot.control_mode = cm_voltage;
       robot.u1_req = motor_bench.warm_up_voltage;
       robot.u2_req = 0;  
