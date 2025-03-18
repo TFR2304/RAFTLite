@@ -40,17 +40,17 @@ pico4drive_t pico4drive;
 
 #include "PicoEncoder.h"
 
-#define ENC1_PIN_A 2
-#define ENC1_PIN_B 3
+#define ENC1_PIN_A 6
+#define ENC1_PIN_B 7
 
-#define ENC2_PIN_A 4
-#define ENC2_PIN_B 5
+#define ENC2_PIN_A 8
+#define ENC2_PIN_B 9
 
-#define ENC3_PIN_A 6
-#define ENC3_PIN_B 7
+#define ENC3_PIN_A 2
+#define ENC3_PIN_B 3
 
-#define ENC4_PIN_A 8
-#define ENC4_PIN_B 9
+#define ENC4_PIN_A 4
+#define ENC4_PIN_B 5
 
 
 #define NUM_ENCODERS 4
@@ -73,17 +73,17 @@ bool calibration_requested;
 
 // PWM stuff
 
-#define MOTOR1A_PIN 11
-#define MOTOR1B_PIN 10
+#define MOTOR1A_PIN 14
+#define MOTOR1B_PIN 15
 
-#define MOTOR2A_PIN 13
-#define MOTOR2B_PIN 12
+#define MOTOR2A_PIN 17
+#define MOTOR2B_PIN 16
 
-#define MOTOR3A_PIN 15
-#define MOTOR3B_PIN 14
+#define MOTOR3A_PIN 10
+#define MOTOR3B_PIN 11
 
-#define MOTOR4A_PIN 17
-#define MOTOR4B_PIN 16
+#define MOTOR4A_PIN 13
+#define MOTOR4B_PIN 12
 
 //#define SOLENOID_PIN_A 12
 //#define SOLENOID_PIN_B 13
@@ -185,13 +185,13 @@ void process_command(command_frame_t frame)
     robot.u4_req = frame.value;
 
   } else if (frame.command_is("w1")) { 
-    robot.w1_req = -frame.value;
+    robot.w1_req = frame.value;
 
   } else if (frame.command_is("w2")) {
     robot.w2_req = frame.value;
 
   } else if (frame.command_is("w3")) { 
-    robot.w3_req = -frame.value;
+    robot.w3_req = frame.value;
 
   } else if (frame.command_is("w4")) {
     robot.w4_req = frame.value;
@@ -312,10 +312,10 @@ void read_PIO_encoders(void)
   encoders[1].update();  
   encoders[2].update();
   encoders[3].update(); 
-  robot.enc1 = encoders[0].speed;
-  robot.enc2 = -encoders[1].speed;
-  robot.enc3 = encoders[2].speed;
-  robot.enc4 = -encoders[3].speed;
+  robot.enc1 = -encoders[0].speed;
+  robot.enc2 = encoders[1].speed;
+  robot.enc3 = -encoders[2].speed;
+  robot.enc4 = encoders[3].speed;
 }
 
 
@@ -802,9 +802,13 @@ void loop()
     serial_commands.send_command("vne", robot.vne);
     serial_commands.send_command("we", robot.we);
 
-    serial_commands.send_command("w1", (-robot.w1e));
+    serial_commands.send_command("v", robot.v);
+    serial_commands.send_command("vn", robot.vn);
+    serial_commands.send_command("w", robot.w);
+
+    serial_commands.send_command("w1", robot.w1e);
     serial_commands.send_command("w2", robot.w2e);
-    serial_commands.send_command("w3", (-robot.w3e));
+    serial_commands.send_command("w3", robot.w3e);
     serial_commands.send_command("w4", robot.w4e);
 
     serial_commands.send_command("p1", robot.p1e);

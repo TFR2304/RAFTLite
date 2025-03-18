@@ -219,7 +219,6 @@ void robot_t::setRobotVW(float Vnom, float VNnom, float Wnom)
   vn = VNnom;
   w = Wnom;
 
-
 }
 
 
@@ -257,9 +256,9 @@ void robot_t::calcMotorsVoltage(void)
     v3ref = v + vn - w*L1_L2 / 2;
     v4ref = v - vn + w*L1_L2 / 2;
     
-    w1ref = -(v1ref / wheel_radius);
+    w1ref = (v1ref / wheel_radius);
     w2ref = v2ref / wheel_radius;    
-    w3ref = -(v3ref / wheel_radius);
+    w3ref = (v3ref / wheel_radius);
     w4ref = v4ref / wheel_radius;     
   } else if (control_mode == cm_pos) {
     p1ref = p1_req;
