@@ -97,15 +97,12 @@
   
     found = false;
     IR_max = 0;
-    total = 0;
     last_v = 0;
     pos_right = 999;
     for (c = 0; c < 5; c++) {
       v = IR_values[c] - IR_WaterLevel;
       if (v < 0) v = 0;
       if (v > IR_max) IR_max = v;
-      total = total + v;
-  
       if (!found && last_v > IR_tresh && v <= IR_tresh) {
         pos_right = -0.001026*(-12 + 16.0 * (c - 3) + 16.0 * (IR_tresh - last_v) / (v - last_v)) + 0.001696;
         found = true;

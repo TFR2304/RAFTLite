@@ -101,6 +101,10 @@
     int LastTouchSwitch, TouchSwitch;
     state_machine_t *pfsm;
     gchannels_t *pchannels;
+
+      bool control_event;
+      bool new_line_read = false;
+      bool at_destin = false;
   
     robot_t();
   
@@ -112,7 +116,10 @@
     void accelerationLimit(void);
     void calcMotorsVoltage(void);
     
-    void gotoXYTheta(float xf, float yf, float thf);/////
+    float dist(float xd,float yd);
+    void dist2Line(float xe, float ye, float xi, float yi, float xf, float yf, float& xr, float& yr);
+    void gotoXYTheta(float xf, float yf, float thf);
+    void FollowLine(float xi, float yi, float xf, float yf, float thf);
   
     void followLineRight(float Vnom, float K);
     void followLineLeft(float Vnom, float K);

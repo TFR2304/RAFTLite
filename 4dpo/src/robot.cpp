@@ -36,11 +36,36 @@
 #define DIST_DA 0.05
 #define THETA_DA 0.05
 #define TOL_FINTHETA 0.01
-#define VEL_LIN_NOM 0.2
-#define VEL_ANG_NOM 0.5
+#define VEL_LIN_NOM 0.1 // 0.2
+#define VEL_ANG_NOM 0.2 // 0.5
+#define DIST_NEW_POSE 0.02
+#define THETA_NEW_POSE 0.02
+
+
+#define K_ERROR_LIN 10
 
 #define TOL_TH_LOC 0.524 // 30 degres
 #define TOL_DIST_LOC 0.05
+
+#define D12 0.16
+#define D2z -0.01
+
+//State Machine states
+#define Go_Forward 1
+#define De_Accel_Lin 2
+#define Stop_Lin 3
+
+#define  Rotation 1
+#define  De_Accel_Rot 2
+#define  Stop_Rot 3
+
+//Used to find fastest rotation
+#define RotateRight 1
+#define RotateLeft -1
+
+
+int state_Lin = Stop_Lin;
+int state_Rot = Stop_Rot;
 
 robot_t robot;
 
@@ -321,6 +346,120 @@ void robot_t::followLineLeft(float Vnom, float K)
   vn_req = 0;
   w_req = -K * IRLine_Front.pos_left;;
   v_req = Vnom;
+}
+
+float robot_t::dist(float xd, float yd)
+{
+  return sqrt(pow(xd, 2) + pow(yd, 2));
+}  
+
+void robot_t::dist2Line(float xe, float ye, float xi, float yi, float xf, float yf, float& xr, float& yr) {
+  float ux = (xf - xi) / dist(xf - xi, yf - yi);
+  float uy = (yf - yi) / dist(xf - xi, yf - yi);
+
+  float k = (xe*uy - ye*ux - xi*uy + yi*ux)/(pow(ux,2) + pow(uy,2));
+
+  xr = xe - k*uy;
+  yr = ye + k*ux;
+}
+
+void robot_t::FollowLine(float xi, float yi, float xf, float yf, float thf)
+{
+  float error_dist = dist(xf - xe, yf - ye);
+  float xr, yr;
+  dist2Line(xe, ye, xi, yi, xf, yf, xr, yr);
+  float alfa = atan2(yf - ye, xf - xe);
+
+  float error_final_rot = normalize_angle(thf - thetae);
+
+  //Find fastest rotation
+  int rotate_to_final = 0;
+  if (error_final_rot > 0.0)
+      rotate_to_final = RotateRight;
+  else
+      rotate_to_final = RotateLeft;
+
+  switch(state_Lin) {
+      case Go_Forward:
+          if (error_dist < TOL_FINDIST)
+              state_Lin = Stop_Lin;
+          else if (error_dist < DIST_DA)
+              state_Lin = De_Accel_Lin;
+          break;
+      case De_Accel_Lin:
+          if (error_dist < TOL_FINDIST)
+              state_Lin = Stop_Lin;
+          else if (error_dist > DIST_NEW_POSE)
+              state_Lin = Go_Forward;
+          break;
+      case Stop_Lin:
+          if (error_dist > DIST_NEW_POSE)
+              state_Lin = Go_Forward;
+          break;
+      default:
+          state_Lin = Stop_Lin;
+  }
+
+  //Transitions Rotation
+  switch(state_Rot) {
+      case Rotation:
+          if (abs(error_final_rot) < TOL_FINTHETA)
+              state_Rot = Stop_Rot;
+          else if (abs(error_final_rot) < THETA_DA)
+              state_Rot = De_Accel_Rot;
+          break;
+      case De_Accel_Rot:
+          if (abs(error_final_rot) < TOL_FINTHETA)
+              state_Rot = Stop_Rot;
+          else if (abs(error_final_rot) > DIST_NEW_POSE)
+              state_Rot = Rotation;
+          break;
+      case Stop_Rot:
+          if (abs(error_final_rot) > THETA_NEW_POSE)
+              state_Rot = Rotation;
+          break;
+      default:
+          state_Rot = Stop_Rot;
+  }
+
+  //Outputs Linear Velocity
+  double VlinX, VlinY;
+  VlinX = cos(alfa) + K_ERROR_LIN * (xr - xe);
+  VlinY = sin(alfa) + K_ERROR_LIN * (yr - ye);
+  VlinX = VlinX / sqrt(pow(VlinX,2) + pow(VlinY,2));
+  VlinY = VlinY / sqrt(pow(VlinX,2) + pow(VlinY,2));
+  switch(state_Lin) {
+      case Go_Forward:
+          v_req = VEL_LIN_NOM * (VlinX * cos(thetae) + VlinY * sin(thetae));
+          vn_req = VEL_LIN_NOM * (-VlinX * sin(thetae) + VlinY * cos(thetae));
+          break;
+      case De_Accel_Lin:
+          v_req = (VEL_LIN_NOM/3) * (VlinX * cos(thetae) + VlinY * sin(thetae));
+          vn_req = (VEL_LIN_NOM/3) * (-VlinX * sin(thetae) + VlinY * cos(thetae));
+          break;
+      case Stop_Lin:
+          v_req = 0.0;
+          vn_req = 0.0;
+          break;
+      default:
+          v_req = 0.0;
+          vn_req = 0.0;
+  }
+
+  //Outputs Rotation
+  switch(state_Rot) {
+      case Rotation:
+          w_req = VEL_ANG_NOM * rotate_to_final;
+          break;
+      case De_Accel_Rot:
+          w_req = (VEL_ANG_NOM/3) * rotate_to_final;
+          break;
+      case Stop_Lin:
+          w_req = 0.0;
+          break;
+      default:
+          w_req = 0.0;
+  }
 }
 
 void robot_t::gotoXYTheta(float xf, float yf, float thf)

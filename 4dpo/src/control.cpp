@@ -15,18 +15,19 @@ class main_fsm_t: public state_machine_t
       robot.rel_s = 0;
       set_new_state(1);
 
-    } else if (state == 1 && robot.tof_dist < 0.04) {
+    } else if (state == 1 && robot.TouchSwitch) {
+      robot.at_destin = false;
       set_new_state(2);
 
-    } else if(state == 2 && tis > 0.1) {
-      robot.rel_s = 0;
+    } else if (state == 2 && robot.at_destin) {
+      robot.at_destin = false;
       set_new_state(3);
 
-    } else if(state == 3 && robot.rel_s < -0.12) {
-      robot.rel_theta = 0;
-      set_new_state(4);
+    } else if (state == 3) {
+      //robot.rel_theta = 0;
+      //set_new_state(4);
 
-    } else if(state == 4 && robot.rel_theta > radians(170)) {
+    }  else if(state == 4 && robot.rel_theta > radians(170)) {
       set_new_state(5);
       robot.IRLine.crosses = 0;
 
@@ -91,15 +92,18 @@ class main_fsm_t: public state_machine_t
 
     } else if (state == 1) {  // Go: Get first box
       robot.solenoid_PWM = 0;
-      robot.followLineLeft(robot.follow_v, robot.follow_k);
-
+      //robot.followLineLeft(robot.follow_v, robot.follow_k);
+      //robot.gotoXYTheta(-0.7225, 0.44, PI/2);
+      robot.FollowLine(-0.724, -0.4, -0.724, 0.44, PI/2);
     } else if (state == 2) { // Turn Solenoid On and Get the Box
       robot.solenoid_PWM = 180;
-      robot.followLineLeft(robot.follow_v, robot.follow_k);
+      //robot.followLineLeft(robot.follow_v, robot.follow_k);
+      robot.gotoXYTheta(-0.7225, 0.34, PI/2);
     
     } else if (state == 3) {  // Go back with the box
-      robot.solenoid_PWM = 180;
-      robot.setRobotVW(-0.1, 0, 0);
+      //robot.solenoid_PWM = 180;
+      //robot.setRobotVW(-0.1, 0, 0);
+      robot.gotoXYTheta(-0.6, 0.24, 0);
       
     } else if (state == 4) {  // Turn arround
       robot.solenoid_PWM = 180;
@@ -173,8 +177,7 @@ class main_fsm_t: public state_machine_t
 
     } else if (state == 301)
     {
-      robot.followLineRight(robot.follow_v, robot.follow_k);
-
+      robot.FollowLine(-0.724, -0.4, -0.724, 0.44, PI/2);
     } 
    else if (state == 302)
   {
