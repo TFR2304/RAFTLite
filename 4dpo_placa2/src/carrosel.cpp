@@ -62,3 +62,13 @@ void carrosel_t::calculate_motors_voltage(void)
  if (w_req != 0)
   u1 = PID[0].calc(w_req, we) - w_req * PID[0].ppars->dead_zone;
 }
+
+void carrosel_t::send_command(const char* command, float par)
+{
+  if (pchannels) pchannels->send_command(command, par);
+}
+
+void carrosel_t::send_command(const char* command, const char* par)
+{
+  if (pchannels) pchannels->send_command(command, par);
+}
