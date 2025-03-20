@@ -862,11 +862,6 @@ void loop()
   serial_commands.flush();
   Serial.println();
 
-  serial1_commands.send_command("u1", robot.u1);
-  serial1_commands.send_command("u2", robot.u2);
-  serial1_commands.send_command("u3", robot.u3);
-  serial1_commands.send_command("u4", robot.u4);
-
   serial1_commands.send_command("IRB0", robot.IRLine_Back.IR_values[0]);
   serial1_commands.send_command("IRB1", robot.IRLine_Back.IR_values[1]);
   serial1_commands.send_command("IRB2", robot.IRLine_Back.IR_values[2]);

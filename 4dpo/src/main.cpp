@@ -190,27 +190,27 @@ void process_command(command_frame_t frame)
   }
   else if (frame.command_is("IRB0"))
   { // The 'u1' command sets the voltage for motor 1
-    robot.IRLine_Back.IR_values[0] = frame.value;
+    robot.IRLine_Back.IR_values[5] = frame.value;
   }
   else if (frame.command_is("IRB1"))
   { // The 'u2' command sets the voltage for motor 1
-    robot.IRLine_Back.IR_values[1] = frame.value;
+    robot.IRLine_Back.IR_values[0] = frame.value;
   }
   else if (frame.command_is("IRB2"))
   { // The 'u1' command sets the voltage for motor 1
-    robot.IRLine_Back.IR_values[2] = frame.value;
+    robot.IRLine_Back.IR_values[1] = frame.value;
   }
   else if (frame.command_is("IRB3"))
   { // The 'u2' command sets the voltage for motor 1
-    robot.IRLine_Back.IR_values[3] = frame.value;
+    robot.IRLine_Back.IR_values[2] = frame.value;
   }
   else if (frame.command_is("IRB4"))
   { // The 'u2' command sets the voltage for motor 1
-    robot.IRLine_Back.IR_values[4] = frame.value;
+    robot.IRLine_Back.IR_values[3] = frame.value;
   }
   else if (frame.command_is("IRB5"))
   { // The 'u2' command sets the voltage for motor 1
-    robot.IRLine_Back.IR_values[5] = frame.value;
+    robot.IRLine_Back.IR_values[4] = frame.value;
   }
   else if (frame.command_is("w1"))
   {
