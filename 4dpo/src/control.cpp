@@ -29,22 +29,22 @@ class main_fsm_t: public state_machine_t
 
     }  else if(state == 4 && robot.rel_theta > radians(170)) {
       set_new_state(5);
-      robot.IRLine.crosses = 0;
+      //robot.IRLine.crosses = 0;
 
-    } else if(state == 5 && robot.IRLine.crosses >= 5) {
+    } else if(state == 5 /*&& Rrobot.IRLine.crosses >= 5*/) {
       robot.rel_s = 0;
       robot.rel_theta = 0;
       set_new_state(6);
 
-    } else if(state == 6 && robot.rel_theta < radians(-70) && robot.IRLine.total > 1500) {
+    } else if(state == 6 && robot.rel_theta < radians(-70) /*&& robot.IRLine.total > 1500*/) {
       set_new_state(7);
 
     } else if(state == 7 && tis > 2.0) {
-      robot.IRLine.crosses = 0;
+      //robot.IRLine.crosses = 0;
       set_new_state(8);
     
     } else if(state == 202 && tis > 2.0) {
-      robot.IRLine.crosses = 0;
+      //robot.IRLine.crosses = 0;
       set_new_state(200);
 
     } else if(state == 203 && actions_count > 0) {
@@ -140,14 +140,14 @@ class main_fsm_t: public state_machine_t
     } else if (state == 102) {  // Option for remote PID control
       robot.control_mode = cm_pid;
 
-    } else if (state == 199) {
+    } /*else if (state == 199) {
       robot.v_req = 0.1;   // Simple line follwower
       robot.w_req = 4 * robot.IRLine.IR_values[4] / 1024.0 
                   + 2 * robot.IRLine.IR_values[3] / 1024.0
                   - 2 * robot.IRLine.IR_values[1] / 1024.0
                   - 4 * robot.IRLine.IR_values[0] / 1024.0;
 
-    } else if (state == 200) {  // Direct stop
+    }*/ else if (state == 200) {  // Direct stop
       robot.control_mode = cm_voltage;
       robot.u1 = 0;
       robot.u2 = 0;

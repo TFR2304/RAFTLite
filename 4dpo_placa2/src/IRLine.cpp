@@ -164,6 +164,5 @@
       IR_pos = IR_pos + v * (c - 2) * 16.0;
     }
     if (IR_total > 0) IR_pos = IR_pos / IR_total;
-  }
-  */
-  
+  }
+  */

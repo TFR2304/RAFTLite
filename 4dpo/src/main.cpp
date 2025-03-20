@@ -135,9 +135,9 @@ void readIRSensors(IRLine_t& IRLine)
 uint32_t encodeIRSensors(void)
 {
   byte c;  // Encode five IR sensors with 6 bits for each sensor
-  uint32_t result = robot.IRLine.IR_values[0] >> 4; // From 10 bits to 6 bits
+  uint32_t result = robot.IRLine_Back.IR_values[0] >> 4; // From 10 bits to 6 bits
   for (c = 1; c < 5; c++) {
-    result = (result << 6) | (robot.IRLine.IR_values[c] >> 4);
+    result = (result << 6) | (robot.IRLine_Back.IR_values[c] >> 4);
   }
   return result;
 }
@@ -185,6 +185,24 @@ void process_command(command_frame_t frame)
 
   } else if (frame.command_is("u4")) { // The 'u2' command sets the voltage for motor 1
     robot.u4_req = frame.value;
+
+  } else if (frame.command_is("IRB0")) { // The 'u1' command sets the voltage for motor 1
+    robot.IRLine_Back.IR_values[0] = frame.value;
+
+  } else if (frame.command_is("IRB1")) { // The 'u2' command sets the voltage for motor 1
+    robot.IRLine_Back.IR_values[1] = frame.value;
+
+  } else if (frame.command_is("IRB2")) { // The 'u1' command sets the voltage for motor 1
+    robot.IRLine_Back.IR_values[2] = frame.value;
+
+  } else if (frame.command_is("IRB3")) { // The 'u2' command sets the voltage for motor 1
+    robot.IRLine_Back.IR_values[3] = frame.value;
+
+  } else if (frame.command_is("IRB4")) { // The 'u2' command sets the voltage for motor 1
+    robot.IRLine_Back.IR_values[4] = frame.value;
+
+  } else if (frame.command_is("IRB4")) { // The 'u2' command sets the voltage for motor 1
+    robot.IRLine_Back.IR_values[5] = frame.value;
 
   } else if (frame.command_is("w1")) { 
     robot.w1_req = frame.value;
@@ -722,14 +740,17 @@ void loop()
 
     // Read and process sensors
     read_PIO_encoders();
-     
-    robot.odometry();
-    //robot.battery_voltage = 7.4; // if it could not be measured...
-    readIRSensors(robot.IRLine);
     
-    robot.IRLine.calcIRLineEdgeLeft();
-    robot.IRLine.calcIRLineEdgeRight();
-    robot.IRLine.calcCrosses();
+    robot.localization();
+    robot.odometry();
+  
+    //robot.battery_voltage = 7.4; // if it could not be measured...
+    //readIRSensors(robot.IRLine_Back);
+    readIRSensors(robot.IRLine_Front);
+    
+    robot.IRLine_Front.calcIRLineEdgeLeft();
+    robot.IRLine_Front.calcIRLineEdgeRight();
+    robot.IRLine_Front.calcCrosses();
 
     #ifdef HAS_VL53L0X
     if (tof.readRangeAvailable()) {
@@ -759,6 +780,7 @@ void loop()
     // Calc outputs
     //robot.accelerationLimit();
     robot.v = robot.v_req;
+    robot.vn = robot.vn_req;
     robot.w = robot.w_req;
     
     robot.calcMotorsVoltage();
@@ -840,11 +862,17 @@ void loop()
 
     serial_commands.send_command("IP", WiFi.localIP().toString().c_str());
     
-    serial_commands.send_command("IR0", robot.IRLine.IR_values[0]);
-    serial_commands.send_command("IR1", robot.IRLine.IR_values[1]);
-    serial_commands.send_command("IR2", robot.IRLine.IR_values[2]);
-    serial_commands.send_command("IR3", robot.IRLine.IR_values[3]);
-    serial_commands.send_command("IR4", robot.IRLine.IR_values[4]);
+    serial_commands.send_command("IR0", robot.IRLine_Front.IR_values[0]);
+    serial_commands.send_command("IR1", robot.IRLine_Front.IR_values[1]);
+    serial_commands.send_command("IR2", robot.IRLine_Front.IR_values[2]);
+    serial_commands.send_command("IR3", robot.IRLine_Front.IR_values[3]);
+    serial_commands.send_command("IR4", robot.IRLine_Front.IR_values[4]);
+
+    serial_commands.send_command("IRB0", robot.IRLine_Back.IR_values[0]);
+    serial_commands.send_command("IRB1", robot.IRLine_Back.IR_values[1]);
+    serial_commands.send_command("IRB2", robot.IRLine_Back.IR_values[2]);
+    serial_commands.send_command("IRB3", robot.IRLine_Back.IR_values[3]);
+    serial_commands.send_command("IRB4", robot.IRLine_Back.IR_values[4]);
 
     //serial_commands.send_command("d0", robot.tof_dist);
 
@@ -876,11 +904,11 @@ void loop()
     serial1_commands.send_command("u3", robot.u3);
     serial1_commands.send_command("u4", robot.u4);
 
-    serial1_commands.send_command("IR0", robot.IRLine.IR_values[0]);
+    /*serial1_commands.send_command("IR0", robot.IRLine.IR_values[0]);
     serial1_commands.send_command("IR1", robot.IRLine.IR_values[1]);
     serial1_commands.send_command("IR2", robot.IRLine.IR_values[2]);
     serial1_commands.send_command("IR3", robot.IRLine.IR_values[3]);
-    serial1_commands.send_command("IR4", robot.IRLine.IR_values[4]);
+    serial1_commands.send_command("IR4", robot.IRLine.IR_values[4]);*/
 
     serial1_commands.flush(); 
 

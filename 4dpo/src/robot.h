@@ -89,7 +89,7 @@
     float follow_v, follow_k;
 
     IRLine_t IRLine_Front, IRLine_Back, last_IRLine_Front, last_IRLine_Back;
-    IRLine_t IRLine;
+    //IRLine_t IRLine;
     PID_t PID[NUM_WHEELS];
   
     int solenoid_PWM;
