@@ -89,13 +89,23 @@ INA226_WE ina226 = INA226_WE(0x40);
 #endif
 
 #include "robot.h"
+#include "arm.h"
+#include "carrosel.h"
 
-void init_control(robot_t &robot);
-void control(robot_t &robot);
+//void init_control(robot_t  &robot);
+//void control(robot_t &robot);
+
+void init_control(arm_t  &arm);
+void control(arm_t &arm);
+
+//void init_control(carrosel_t  &carrosel);
+//void control(carrosel_t &carrosel);
 
 #include "trajectories.h"
 
-PID_pars_t wheel_PID_pars;
+PID_pars_t arm_PID;
+PID_pars_t carrosel_PID;
+
 
 uint32_t interval, last_cycle;
 uint32_t loop_micros;
@@ -127,8 +137,9 @@ uint32_t encodeIRSensors(void)
 void set_interval(float new_interval)
 {
   interval = new_interval * 1000000L; // In microseconds
-  robot.dt = new_interval;            // In seconds
-  wheel_PID_pars.dt = robot.dt;
+  arm.dt = new_interval;            // In seconds
+  arm_PID.dt = arm.dt;
+  //carrosel_PID.dt = arm.dt;
 }
 
 // Remote commands-Evitar Mexer
@@ -150,48 +161,24 @@ void process_command(command_frame_t frame)
 
   if (frame.command_is("mo"))
   { // The 'mo'de command ...
-    robot.control_mode = (control_mode_t)frame.value;
+    arm.control_mode = (control_mode_arm)frame.value;
   }
   else if (frame.command_is("u1"))
   { // The 'u1' command sets the voltage for motor 1
-    robot.u1_req = frame.value;
-  }
-  else if (frame.command_is("u2"))
-  { // The 'u2' command sets the voltage for motor 1
-    robot.u2_req = frame.value;
-  }
-  else if (frame.command_is("u3"))
-  { // The 'u1' command sets the voltage for motor 1
-    robot.u3_req = frame.value;
-  }
-  else if (frame.command_is("u4"))
-  { // The 'u2' command sets the voltage for motor 1
-    robot.u4_req = frame.value;
+    arm.u_req = frame.value;
   }
   else if (frame.command_is("w1"))
   {
-    robot.w1_req = -frame.value;
-  }
-  else if (frame.command_is("w2"))
-  {
-    robot.w2_req = frame.value;
-  }
-  else if (frame.command_is("w3"))
-  {
-    robot.w3_req = frame.value;
-  }
-  else if (frame.command_is("w4"))
-  {
-    robot.w4_req = -frame.value;
+    arm.w_req = -frame.value;
   }
   else if (frame.command_is("p1"))
   {
-    robot.p1_req = frame.value;
+    arm.p_req = frame.value;
   }
   else if (frame.command_is("st"))
   {
-    robot.pfsm->set_new_state(frame.value);
-    robot.pfsm->update_state();
+    arm.pfsm->set_new_state(frame.value);
+    arm.pfsm->update_state();
   }
   else if (frame.command_is("dt"))
   {
@@ -199,31 +186,15 @@ void process_command(command_frame_t frame)
   }
   else if (frame.command_is("v"))
   {
-    robot.v_req = frame.value;
-  }
-  else if (frame.command_is("vn"))
-  {
-    robot.vn_req = frame.value;
+    arm.v_req = frame.value;
   }
   else if (frame.command_is("w"))
   {
-    robot.w_req = frame.value;
+    arm.w_req = frame.value;
   }
   else if (frame.command_is("sl"))
   {
-    robot.solenoid_PWM = frame.value;
-  }
-  else if (frame.command_is("xr"))
-  {
-    robot.xe = frame.value;
-  }
-  else if (frame.command_is("yr"))
-  {
-    robot.ye = frame.value;
-  }
-  else if (frame.command_is("tr"))
-  {
-    robot.thetae = frame.value;
+    arm.solenoid_PWM = frame.value;
   }
   else if (frame.command_is("xt"))
   {
@@ -272,8 +243,8 @@ void process_command(command_frame_t frame)
     if (WiFi.connected())
     {
       http_ota.host = frame.text;
-      http_ota.uri = "/picoRobot/firmware.bin";
-      robot.stoped = true;
+      http_ota.uri = "/picoarm/firmware.bin";
+      arm.stoped = true;
       http_ota.requested = true;
     }
   }
@@ -327,10 +298,7 @@ void read_PIO_encoders(void)
   encoders[1].update();
   encoders[2].update();
   encoders[3].update();
-  robot.enc1 = encoders[0].speed;
-  robot.enc2 = encoders[1].speed;
-  robot.enc3 = encoders[2].speed;
-  robot.enc4 = encoders[3].speed;
+  arm.enc = encoders[0].speed;
 }
 
 void serial_write(const char *buffer, size_t size)
@@ -532,17 +500,17 @@ void setup()
 
   analogReadResolution(10);
   // Register Commands
-  pars_list.register_command("kf", &(wheel_PID_pars.Kf));
-  pars_list.register_command("kc", &(wheel_PID_pars.Kc));
-  pars_list.register_command("ki", &(wheel_PID_pars.Ki));
-  pars_list.register_command("kd", &(wheel_PID_pars.Kd));
-  pars_list.register_command("kfd", &(wheel_PID_pars.Kfd));
-  pars_list.register_command("dz", &(wheel_PID_pars.dead_zone));
-  pars_list.register_command("kfp", &(wheel_PID_pars.Kf_p));
-  pars_list.register_command("kcp", &(wheel_PID_pars.Kc_p));
-  pars_list.register_command("kip", &(wheel_PID_pars.Ki_p));
-  pars_list.register_command("kdp", &(wheel_PID_pars.Kd_p));
-  pars_list.register_command("kfdp", &(wheel_PID_pars.Kfd_p));
+  pars_list.register_command("kf", &(arm_PID.Kf));
+  pars_list.register_command("kc", &(arm_PID.Kc));
+  pars_list.register_command("ki", &(arm_PID.Ki));
+  pars_list.register_command("kd", &(arm_PID.Kd));
+  pars_list.register_command("kfd", &(arm_PID.Kfd));
+  pars_list.register_command("dz", &(arm_PID.dead_zone));
+  pars_list.register_command("kfp", &(arm_PID.Kf_p));
+  pars_list.register_command("kcp", &(arm_PID.Kc_p));
+  pars_list.register_command("kip", &(arm_PID.Ki_p));
+  pars_list.register_command("kdp", &(arm_PID.Kd_p));
+  pars_list.register_command("kfdp", &(arm_PID.Kfd_p));
 
   pars_list.register_command("at", &(traj.thetat));
   pars_list.register_command("xt", &(traj.xt));
@@ -554,17 +522,7 @@ void setup()
   pars_list.register_command("cx", &(traj.cx));
   pars_list.register_command("cy", &(traj.cy));
 
-  pars_list.register_command("fv", &(robot.follow_v));
-  pars_list.register_command("fk", &(robot.follow_k));
-
-  pars_list.register_command("IR0", &(robot.IRLine_Back.IR_values[0]));
-  pars_list.register_command("IR1", &(robot.IRLine_Back.IR_values[1]));
-  pars_list.register_command("IR2", &(robot.IRLine_Back.IR_values[2]));
-  pars_list.register_command("IR3", &(robot.IRLine_Back.IR_values[3]));
-  pars_list.register_command("IR4", &(robot.IRLine_Back.IR_values[4]));
-  pars_list.register_command("IR5", &(robot.IRLine_Back.IR_values[5]));
-
-  // pars_list.register_command("fk", &(robot.i_lambda));
+  // pars_list.register_command("fk", &(arm.i_lambda));
   pars_list.register_command("kt", &(traj.ktheta));
   // pars_list.register_command("ssid", ssid, max_wifi_str);
   // pars_list.register_command("pass", password, max_wifi_str);
@@ -575,8 +533,9 @@ void setup()
 
   serial1_commands.init(process_command, serial1_write);
 
-  robot.pchannels = &serial_commands;
-
+  arm.pchannels = &serial_commands;
+  //robot.pchannels = &serial_commands;
+  //carrosel.pchannels = &serial_commands;
   // Start the serial port with 115200 baudrate
   Serial.begin(115200);
   Serial1.begin(115200);
@@ -587,14 +546,16 @@ void setup()
 
   // PID INITIAL PARAMETERS
 
-  wheel_PID_pars.Kf = 0.3;
-  wheel_PID_pars.Kc = 0.15;
-  wheel_PID_pars.Ki = 1;
-  wheel_PID_pars.Kd = 0;
-  wheel_PID_pars.Kfd = 0;
-  wheel_PID_pars.dt = control_interval;
-  wheel_PID_pars.dead_zone = 0;
+  arm_PID.Kf = 0.3;
+  arm_PID.Kc = 0.15;
+  arm_PID.Ki = 1;
+  arm_PID.Kd = 0;
+  arm_PID.Kfd = 0;
+  arm_PID.dt = 0.04;
+  arm_PID.dead_zone = 0;
 
+  arm.PID.init_pars(&arm_PID);
+  
   // Outras Coisas
   strcpy(ssid, "5DPO-NETWORK");
   strcpy(password, "5dpo5dpo");
@@ -650,7 +611,8 @@ void setup()
 #endif
 
   set_interval(control_interval); // In seconds
-  init_control(robot);
+  init_control(arm);
+  //init_control(carrosel);
 }
 
 /*
@@ -662,6 +624,133 @@ void setup()
 
 
 */
+
+void good_loop()
+{
+
+  uint32_t now = micros();
+  uint32_t delta = now - last_cycle;
+  if (delta >= interval) {
+    loop_micros = micros();
+    last_cycle = now;
+
+    debug = serial_commands.out_count;
+    if (WiFi.connected() && !ip_on)
+  {
+    // Connection established
+    serial_commands.send_command("msg", (String("Pico W is connected to WiFi network with SSID ") + WiFi.SSID()).c_str());
+
+    // Print IP Address
+    ip_on = Udp.begin(localUdpPort);
+    Serial.printf("Now listening at IP %s, UDP port %d\n", WiFi.localIP().toString().c_str(), localUdpPort);
+  }
+
+
+  if (ip_on)
+  {
+    // ArduinoOTA.handle();
+
+    int packetSize = Udp.parsePacket();
+    if (packetSize)
+    {
+      int i;
+      udp_on = 1;
+      // receive incoming UDP packets
+
+      // Serial.printf("Received %d bytes from %s, port %d\n", packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
+      int len = Udp.read(UdpInPacket, UdpBufferSize - 1);
+      if (len > 0)
+      {
+        UdpInPacket[len] = 0;
+      }
+      // Serial.printf("UDP packet contents (as string): %s\n", UdpInPacket);
+
+      for (i = 0; i < len; i++)
+      {
+        udp_commands.process_char(UdpInPacket[i]);
+        // Serial.write(UdpInPacket[i]);
+      }
+    }
+  }
+
+  uint8_t b;
+  if (Serial.available())
+  { // Only do this if there is serial data to be read
+
+    b = Serial.read();
+    serial_commands.process_char(b);
+    // Serial.write(b);
+  }
+
+  if (Serial1.available())
+  { // Only do this if there is serial data to be read
+
+    b = Serial1.read();
+    serial1_commands.process_char(b);
+    // Serial.write(b);
+  }
+
+  pico4drive.update();
+
+  if (load_pars_requested)
+  {
+    load_commands(pars_fname, serial_commands);
+    load_pars_requested = false;
+  }
+
+  // Do this only every "interval" microseconds
+    int32_t now = micros();
+    uint32_t delta = now - last_cycle;
+      loop_micros = micros();
+      last_cycle = now;
+      // last_cycle += interval;
+  
+  
+  #ifdef HAS_VL53L0X
+    if (tof.readRangeAvailable())
+    {
+      arm.prev_tof_dist = arm.tof_dist;
+      arm.tof_dist = tof.readRangeMillimeters() * 1e-3;
+    }
+  #endif
+  
+  #ifdef HAS_INA266
+    ina226.readAndClearFlags();
+    float shuntVoltage_mV = ina226.getShuntVoltage_mV();
+    float busVoltage_V = ina226.getBusVoltage_V();
+    float current_mA = -ina226.getCurrent_mA();
+    // float power_mW = ina226.getBusPower();
+    // float loadVoltage_V  = busVoltage_V + (shuntVoltage_mV/1000);
+  
+    arm.i_sense = arm.i_lambda * arm.i_sense + (1 - arm.i_lambda) * current_mA * 1e-3;
+    arm.u_sense = busVoltage_V * 1000;
+  #endif
+  
+    //----------- Código Para Roda e Braço -------------------------------------------------------
+    // Read and process sensors
+  
+    read_PIO_encoders();
+  
+     
+    arm.odometry();
+    control(arm);
+
+    arm.p = arm.p_req;
+    arm.calcMotorsVoltage();
+
+    arm.PWM = pico4drive.voltage_to_PWM(arm.u);
+    pico4drive.set_driver_PWM(arm.PWM, MOTOR1A_PIN, MOTOR1B_PIN);
+
+    serial_commands.send_command("dbg", 5);
+    serial_commands.send_command("loop", micros() - loop_micros);
+    serial_commands.flush();
+    Serial.println();
+
+  }
+
+
+}
+
 
 void loop()
 {
@@ -675,23 +764,6 @@ void loop()
     Serial.printf("Now listening at IP %s, UDP port %d\n", WiFi.localIP().toString().c_str(), localUdpPort);
   }
 
-  /*
-  if (calibration_requested) {
-    calibration_requested = false;
-    int phases = encoders[1].measurePhases();
-    // check the result, if it's negative, report the error
-    if (phases < 0) {
-      Serial.print("msg: error measuring phases ");
-      Serial.println(phases);
-    } else {
-      // otherwise report the phase calibration number
-      Serial.print("msg: measurement successful, phases 0x");
-      Serial.println(phases, HEX);
-      encoders[1].setPhases(phases);
-    }
-
-  }
-  */
 
   if (ip_on)
   {
@@ -748,22 +820,17 @@ void loop()
   // Do this only every "interval" microseconds
   uint32_t now = micros();
   uint32_t delta = now - last_cycle;
-  if (delta >= interval)
-  {
+  if (delta >= interval) {
     loop_micros = micros();
     last_cycle = now;
     // last_cycle += interval;
-  }
-  // Read and process sensors
-  read_PIO_encoders();
 
-  readIRSensors(robot.IRLine_Back);
 
 #ifdef HAS_VL53L0X
   if (tof.readRangeAvailable())
   {
-    robot.prev_tof_dist = robot.tof_dist;
-    robot.tof_dist = tof.readRangeMillimeters() * 1e-3;
+    arm.prev_tof_dist = arm.tof_dist;
+    arm.tof_dist = tof.readRangeMillimeters() * 1e-3;
   }
 #endif
 
@@ -775,101 +842,100 @@ void loop()
   // float power_mW = ina226.getBusPower();
   // float loadVoltage_V  = busVoltage_V + (shuntVoltage_mV/1000);
 
-  robot.i_sense = robot.i_lambda * robot.i_sense + (1 - robot.i_lambda) * current_mA * 1e-3;
-  robot.u_sense = busVoltage_V * 1000;
+  arm.i_sense = arm.i_lambda * arm.i_sense + (1 - arm.i_lambda) * current_mA * 1e-3;
+  arm.u_sense = busVoltage_V * 1000;
 #endif
 
   //----------- Código Para Roda e Braço -------------------------------------------------------
+  // Read and process sensors
 
+    read_PIO_encoders();
+
+   
+    arm.odometry();
+
+    control(arm);
+
+    // Calc outputs
+    // arm.accelerationLimit();
+    
+
+    arm.calcMotorsVoltage();
+
+    arm.PWM = pico4drive.voltage_to_PWM(arm.u);
+    pico4drive.set_driver_PWM(arm.PWM, MOTOR1A_PIN, MOTOR1B_PIN);
+  
   //----------- Fim Do Código da Roda e do Braço------------------------------------------------
-  digitalWrite(LED_BUILTIN, robot.led);
+     
 
-  // Debug information
-  serial_commands.send_command("dte", delta);
+      // Debug information
+      serial_commands.send_command("dte", delta);
 
-  serial_commands.send_command("u1", robot.u1);
-  serial_commands.send_command("u2", robot.u2);
-  serial_commands.send_command("u3", robot.u3);
-  serial_commands.send_command("u4", robot.u4);
+      serial_commands.send_command("u1", arm.u);
+      
 
-  serial_commands.send_command("e1", robot.enc1);
-  serial_commands.send_command("e2", robot.enc2);
-  serial_commands.send_command("e3", robot.enc3);
-  serial_commands.send_command("e4", robot.enc4);
+      serial_commands.send_command("e1", arm.enc);
+      
 
-  serial_commands.send_command("Vbat", pico4drive.battery_voltage);
+      serial_commands.send_command("Vbat", pico4drive.battery_voltage);
 
-  serial_commands.send_command("ve", robot.ve);
-  serial_commands.send_command("we", robot.we);
+      serial_commands.send_command("ve", arm.ve);
+      serial_commands.send_command("we", arm.we);
 
-  serial_commands.send_command("w1", robot.w1e);
-  serial_commands.send_command("w2", robot.w2e);
-  serial_commands.send_command("w3", robot.w3e);
-  serial_commands.send_command("w4", robot.w4e);
+      serial_commands.send_command("w1", arm.we);
 
-  serial_commands.send_command("p1", robot.p1e);
+      serial_commands.send_command("p1", arm.p_e);
 
-  serial_commands.send_command("sl", robot.solenoid_PWM);
+      serial_commands.send_command("sl", arm.solenoid_PWM);
 
-  serial_commands.send_command("is", robot.i_sense);
-  serial_commands.send_command("us", robot.u_sense);
+      serial_commands.send_command("mode", arm.control_mode);
 
-  serial_commands.send_command("mode", robot.control_mode);
+      serial_commands.send_command("kc", arm_PID.Kc);
+      serial_commands.send_command("ki", arm_PID.Ki);
+      serial_commands.send_command("kd", arm_PID.Kd);
+      serial_commands.send_command("kf", arm_PID.Kf);
 
-  serial_commands.send_command("kc", wheel_PID_pars.Kc);
-  serial_commands.send_command("ki", wheel_PID_pars.Ki);
-  serial_commands.send_command("kd", wheel_PID_pars.Kd);
-  serial_commands.send_command("kf", wheel_PID_pars.Kf);
+      serial_commands.send_command("kcp", arm_PID.Kc_p);
+      serial_commands.send_command("kip", arm_PID.Ki_p);
+      serial_commands.send_command("kdp", arm_PID.Kd_p);
+      serial_commands.send_command("kfp", arm_PID.Kf_p);
 
-  serial_commands.send_command("kcp", wheel_PID_pars.Kc_p);
-  serial_commands.send_command("kip", wheel_PID_pars.Ki_p);
-  serial_commands.send_command("kdp", wheel_PID_pars.Kd_p);
-  serial_commands.send_command("kfp", wheel_PID_pars.Kf_p);
+      serial_commands.send_command("st", arm.pfsm->state);
 
-  serial_commands.send_command("st", robot.pfsm->state);
+      serial_commands.send_command("IP", WiFi.localIP().toString().c_str());
 
-  serial_commands.send_command("IP", WiFi.localIP().toString().c_str());
+      
 
-  serial_commands.send_command("IR0", robot.IRLine_Back.IR_values[0]);
-  serial_commands.send_command("IR1", robot.IRLine_Back.IR_values[1]);
-  serial_commands.send_command("IR2", robot.IRLine_Back.IR_values[2]);
-  serial_commands.send_command("IR3", robot.IRLine_Back.IR_values[3]);
-  serial_commands.send_command("IR4", robot.IRLine_Back.IR_values[4]);
-  serial_commands.send_command("IR5", robot.IRLine_Back.IR_values[5]);
+      // serial_commands.send_command("d0", arm.tof_dist);
 
-  // serial_commands.send_command("d0", robot.tof_dist);
+      // serial_commands.send_command("pr", arm.IRLine.pos_right);
+      // serial_commands.send_command("pl", arm.IRLine.pos_left);
 
-  // serial_commands.send_command("pr", robot.IRLine.pos_right);
-  // serial_commands.send_command("pl", robot.IRLine.pos_left);
+      serial_commands.send_command("m1", arm.PWM);
+    
 
-  serial_commands.send_command("m1", robot.PWM_1);
-  serial_commands.send_command("m2", robot.PWM_2);
+      pars_list.send_sparse_commands(serial_commands);
 
-  serial_commands.send_command("xe", robot.xe);
-  serial_commands.send_command("ye", robot.ye);
-  serial_commands.send_command("te", robot.thetae);
+      Serial.print(" cmd: ");
+      Serial.print(serial_commands.frame.command);
+      Serial.print("; ");
 
-  pars_list.send_sparse_commands(serial_commands);
+      debug = serial_commands.out_count;
+      serial_commands.send_command("dbg", 5);
+      serial_commands.send_command("loop", micros() - loop_micros);
 
-  Serial.print(" cmd: ");
-  Serial.print(serial_commands.frame.command);
-  Serial.print("; ");
+      serial_commands.flush();
+      Serial.println();
 
-  debug = serial_commands.out_count;
-  serial_commands.send_command("dbg", 5);
-  serial_commands.send_command("loop", micros() - loop_micros);
+      serial1_commands.send_command("IRB0", robot.IRLine_Back.IR_values[0]);
+      serial1_commands.send_command("IRB1", robot.IRLine_Back.IR_values[1]);
+      serial1_commands.send_command("IRB2", robot.IRLine_Back.IR_values[2]);
+      serial1_commands.send_command("IRB3", robot.IRLine_Back.IR_values[3]);
+      serial1_commands.send_command("IRB4", robot.IRLine_Back.IR_values[4]);
+      serial1_commands.send_command("IRB5", robot.IRLine_Back.IR_values[5]);
 
-  serial_commands.flush();
-  Serial.println();
+      serial1_commands.flush();
 
-  serial1_commands.send_command("IRB0", robot.IRLine_Back.IR_values[0]);
-  serial1_commands.send_command("IRB1", robot.IRLine_Back.IR_values[1]);
-  serial1_commands.send_command("IRB2", robot.IRLine_Back.IR_values[2]);
-  serial1_commands.send_command("IRB3", robot.IRLine_Back.IR_values[3]);
-  serial1_commands.send_command("IRB4", robot.IRLine_Back.IR_values[4]);
-  serial1_commands.send_command("IRB5", robot.IRLine_Back.IR_values[5]);
-
-  serial1_commands.flush();
-
-  http_ota.handle();
+      http_ota.handle();
+  }
 }

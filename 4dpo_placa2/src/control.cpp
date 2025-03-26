@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "carrosel.h"
+#include "arm.h"
 #include "state_machines.h"
 #include "motor_bench.h"
 #include "trajectories.h"
@@ -65,6 +66,10 @@ class Roda : public state_machine_t
       robot.solenoid_PWM = 180;
       robot.setRobotVW(0, 0, 2.5);
     }
+    else if (state == 300)
+    {
+      //carrosel.control_mode = cm_pos;
+    }
   };
 };
 
@@ -112,24 +117,41 @@ class Braço : public state_machine_t
     { // LED off
       robot.led = 0;
     }
+    else if (state == 300)
+    {
+      arm.control_mode = arm_cm_pos;
+    }
   };
 };
 
 Braço braço;
 
-void init_control(robot_t &robot)
+void init_control(arm_t &arm)
 {
-  roda.set_new_state(200);
-  braço.set_new_state(200);
-  roda.update_state();
+  arm.pfsm = &braço;
+  braço.set_new_state(300);
   braço.update_state();
-  state_machines.register_state_machine(&roda);
   state_machines.register_state_machine(&braço);
 }
 
-void control(robot_t &robot)
+void control(arm_t &arm)
 {
-  robot.control_mode = cm_kinematics;
+  arm.control_mode = arm_cm_pos;
+
+  state_machines.step();
+}
+
+void init_control(carrosel_t &carrosel)
+{
+  carrosel.pfsm = &roda;
+  roda.set_new_state(300);
+  roda.update_state();
+  state_machines.register_state_machine(&roda);
+}
+
+void control(carrosel_t &carrosel)
+{
+  carrosel.control_mode = carrosel_cmc_pos;
 
   state_machines.step();
 }

@@ -100,16 +100,16 @@ robot_t::robot_t()
 void robot_t::odometry(void)
 {
   // Estimate wheels speed using the encoders
-  // w1e = enc1 * (TWO_PI / (5 * 64.0 * 2.0 * 1920.0));//missing gear ratio for the arm and the ferris wheel
+  //w1e = enc1 * (TWO_PI / (5 * 64.0 * 2.0 * 1920.0));//missing gear ratio for the arm and the ferris wheel
   // w2e = enc2 * (TWO_PI / (5 * 64.0 * 2.0 * 1920.0));
 
-  // p1e += w1e*dt;
+  //p1e += w1e*dt;
 
-  /*v1e = w1e * wheel_radius;
-  v2e = w2e * wheel_radius;
+  //v1e = w1e * wheel_radius;
+  //v2e = w2e * wheel_radius;
 
   // Estimate robot speed
-  ve = (v1e + v2e) / 2.0;
+  /*ve = (v1e + v2e) / 2.0;
   we = (v1e - v2e) / wheel_dist;
 
   // Estimate the distance and the turn angle
@@ -381,7 +381,6 @@ void robot_t::followLineLeft(float Vnom, float K)
 {
   vn_req = 0;
   w_req = -K * IRLine_Front.pos_left;
-  ;
   v_req = Vnom;
 }
 

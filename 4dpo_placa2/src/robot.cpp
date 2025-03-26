@@ -77,10 +77,10 @@ robot_t::robot_t()
 void robot_t::odometry(void)
 {
   // Estimate wheels speed using the encoders
-  //w1e = enc1 * (TWO_PI / (5 * 64.0 * 2.0 * 1920.0));//missing gear ratio for the arm and the ferris wheel 
+  w1e = enc1 * (TWO_PI / (5 * 64.0 * 2.0 * 1920.0));//missing gear ratio for the arm and the ferris wheel 
   //w2e = enc2 * (TWO_PI / (5 * 64.0 * 2.0 * 1920.0));
 
-  //p1e += w1e*dt;
+  p1e += w1e*dt;
 
   /*v1e = w1e * wheel_radius;
   v2e = w2e * wheel_radius;
@@ -101,7 +101,7 @@ void robot_t::odometry(void)
   // Relative displacement
   rel_s += ds;
   rel_theta += dtheta;*/
-  w1e = robot.enc1 * (TWO_PI / (64* 2.0 * 1920.0));
+  //w1e = robot.enc1 * (TWO_PI / (64* 2.0 * 1920.0));
   w2e = robot.enc2 * (TWO_PI / (64* 2.0 * 1920.0));
   w3e = robot.enc3 * (TWO_PI / (64* 2.0 * 1920.0));
   w4e = robot.enc4 * (TWO_PI / (64* 2.0 * 1920.0));  

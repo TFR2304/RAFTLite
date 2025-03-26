@@ -2,6 +2,13 @@
 #include "IRLine.h"
 #include "Arduino.h"
 #include "gchannels.h"
+#include "state_machines.h"
+
+typedef enum
+{
+    carrosel_cmc_pos,
+    carrosel_cm_voltage
+} control_mode_carrosel;
 
 class carrosel_t
 {
@@ -25,6 +32,8 @@ public:
 
  PID_t PID[1];
  gchannels_t *pchannels;
+ state_machine_t *pfsm;
+ control_mode_carrosel control_mode;
 
  carrosel_t();
 
