@@ -95,17 +95,15 @@ INA226_WE ina226 = INA226_WE(0x40);
 //void init_control(robot_t  &robot);
 //void control(robot_t &robot);
 
-void init_control(arm_t  &arm);
-void control(arm_t &arm);
+void init_control(arm_t &arm, carrosel_t &carrosel);
+void control(arm_t &arm, carrosel_t &carrosel);
 
 //void init_control(carrosel_t  &carrosel);
 //void control(carrosel_t &carrosel);
 
 #include "trajectories.h"
 
-PID_pars_t arm_PID;
-PID_pars_t carrosel_PID;
-
+PID_pars_t arm_PID, carrosel_PID;
 
 uint32_t interval, last_cycle;
 uint32_t loop_micros;
@@ -139,7 +137,8 @@ void set_interval(float new_interval)
   interval = new_interval * 1000000L; // In microseconds
   arm.dt = new_interval;            // In seconds
   arm_PID.dt = arm.dt;
-  //carrosel_PID.dt = arm.dt;
+  carrosel.dt = new_interval;
+  carrosel_PID.dt = carrosel.dt;
 }
 
 // Remote commands-Evitar Mexer
@@ -159,38 +158,67 @@ void process_command(command_frame_t frame)
 {
   pars_list.process_read_command(frame);
 
-  if (frame.command_is("mo"))
+  if (frame.command_is("moA"))
   { // The 'mo'de command ...
     arm.control_mode = (control_mode_arm)frame.value;
   }
-  else if (frame.command_is("u1"))
+  else if (frame.command_is("moC"))
+  { // The 'mo'de command ...
+    carrosel.control_mode = (control_mode_carrosel)frame.value;
+  }
+  else if (frame.command_is("u1A"))
   { // The 'u1' command sets the voltage for motor 1
     arm.u_req = frame.value;
   }
-  else if (frame.command_is("w1"))
+  else if (frame.command_is("u1C"))
+  { // The 'u1' command sets the voltage for motor 1
+    carrosel.u_req = frame.value;
+  }
+  else if (frame.command_is("w1A"))
   {
     arm.w_req = -frame.value;
   }
-  else if (frame.command_is("p1"))
+  else if (frame.command_is("w1C"))
+  {
+    carrosel.w_req = -frame.value;
+  }
+  else if (frame.command_is("p1A"))
   {
     arm.p_req = frame.value;
   }
-  else if (frame.command_is("st"))
+  else if (frame.command_is("p1C"))
+  {
+    carrosel.p_req = frame.value;
+  }
+  else if (frame.command_is("stA"))
   {
     arm.pfsm->set_new_state(frame.value);
     arm.pfsm->update_state();
+  }
+  else if (frame.command_is("stC"))
+  {
+    carrosel.pfsm->set_new_state(frame.value);
+    carrosel.pfsm->update_state();
   }
   else if (frame.command_is("dt"))
   {
     set_interval(frame.value);
   }
-  else if (frame.command_is("v"))
+  else if (frame.command_is("vA"))
   {
     arm.v_req = frame.value;
   }
-  else if (frame.command_is("w"))
+  else if (frame.command_is("vC"))
+  {
+    carrosel.v_req = frame.value;
+  }
+  else if (frame.command_is("wA"))
   {
     arm.w_req = frame.value;
+  }
+  else if (frame.command_is("wC"))
+  {
+    carrosel.w_req = frame.value;
   }
   else if (frame.command_is("sl"))
   {
@@ -296,9 +324,8 @@ void read_PIO_encoders(void)
 {
   encoders[0].update();
   encoders[1].update();
-  encoders[2].update();
-  encoders[3].update();
-  arm.enc = encoders[0].speed;
+  arm.enc = encoders[1].speed;
+  carrosel.enc = encoders[0].speed;
 }
 
 void serial_write(const char *buffer, size_t size)
@@ -500,17 +527,28 @@ void setup()
 
   analogReadResolution(10);
   // Register Commands
-  pars_list.register_command("kf", &(arm_PID.Kf));
-  pars_list.register_command("kc", &(arm_PID.Kc));
-  pars_list.register_command("ki", &(arm_PID.Ki));
-  pars_list.register_command("kd", &(arm_PID.Kd));
-  pars_list.register_command("kfd", &(arm_PID.Kfd));
-  pars_list.register_command("dz", &(arm_PID.dead_zone));
-  pars_list.register_command("kfp", &(arm_PID.Kf_p));
-  pars_list.register_command("kcp", &(arm_PID.Kc_p));
-  pars_list.register_command("kip", &(arm_PID.Ki_p));
-  pars_list.register_command("kdp", &(arm_PID.Kd_p));
-  pars_list.register_command("kfdp", &(arm_PID.Kfd_p));
+  pars_list.register_command("kfA", &(arm_PID.Kf));
+  pars_list.register_command("kfC", &(carrosel_PID.Kf));
+  pars_list.register_command("kcA", &(arm_PID.Kc));
+  pars_list.register_command("kcC", &(carrosel_PID.Kc));
+  pars_list.register_command("kiA", &(arm_PID.Ki));
+  pars_list.register_command("kiC", &(carrosel_PID.Ki));
+  pars_list.register_command("kdA", &(arm_PID.Kd));
+  pars_list.register_command("kdC", &(carrosel_PID.Kd));
+  pars_list.register_command("kfdA", &(arm_PID.Kfd));
+  pars_list.register_command("kfdC", &(carrosel_PID.Kfd));
+  pars_list.register_command("dzA", &(arm_PID.dead_zone));
+  pars_list.register_command("dzC", &(carrosel_PID.dead_zone));
+  pars_list.register_command("kfpA", &(arm_PID.Kf_p));
+  pars_list.register_command("kfpC", &(carrosel_PID.Kf_p));
+  pars_list.register_command("kcpA", &(arm_PID.Kc_p));
+  pars_list.register_command("kcpC", &(carrosel_PID.Kc_p));
+  pars_list.register_command("kipA", &(arm_PID.Ki_p));
+  pars_list.register_command("kipC", &(carrosel_PID.Ki_p));
+  pars_list.register_command("kdpA", &(arm_PID.Kd_p));
+  pars_list.register_command("kdpC", &(carrosel_PID.Kd_p));
+  pars_list.register_command("kfdpA", &(arm_PID.Kfd_p));
+  pars_list.register_command("kfdpC", &(carrosel_PID.Kfd_p));
 
   pars_list.register_command("at", &(traj.thetat));
   pars_list.register_command("xt", &(traj.xt));
@@ -547,14 +585,27 @@ void setup()
   // PID INITIAL PARAMETERS
 
   arm_PID.Kf = 0.3;
-  arm_PID.Kc = 0.15;
-  arm_PID.Ki = 1;
+  arm_PID.Kc = 0.3636;
+  arm_PID.Ki = 2.5;
   arm_PID.Kd = 0;
   arm_PID.Kfd = 0;
+  arm_PID.Kc_p = 10.195;
+  arm_PID.Kd_p = 0.557;
   arm_PID.dt = 0.04;
   arm_PID.dead_zone = 0;
 
+  carrosel_PID.Kf = 0.3;
+  carrosel_PID.Kc = 0.3636;
+  carrosel_PID.Ki = 2.5;
+  carrosel_PID.Kd = 0;
+  carrosel_PID.Kfd = 0;
+  carrosel_PID.Kc_p = 10.195;
+  carrosel_PID.Kd_p = 0.557;
+  carrosel_PID.dt = 0.04;
+  carrosel_PID.dead_zone = 0;
+
   arm.PID.init_pars(&arm_PID);
+  carrosel.PID.init_pars(&carrosel_PID);
   
   // Outras Coisas
   strcpy(ssid, "5DPO-NETWORK");
@@ -611,7 +662,7 @@ void setup()
 #endif
 
   set_interval(control_interval); // In seconds
-  init_control(arm);
+  init_control(arm, carrosel);
   //init_control(carrosel);
 }
 
@@ -733,7 +784,7 @@ void good_loop()
   
      
     arm.odometry();
-    control(arm);
+    control(arm, carrosel);
 
     arm.p = arm.p_req;
     arm.calcMotorsVoltage();
@@ -853,17 +904,23 @@ void loop()
 
    
     arm.odometry();
+    carrosel.odometry();
 
-    control(arm);
+    control(arm, carrosel);
 
     // Calc outputs
     // arm.accelerationLimit();
     
 
     arm.calcMotorsVoltage();
+    carrosel.calcMotorsVoltage();
 
     arm.PWM = pico4drive.voltage_to_PWM(arm.u);
-    pico4drive.set_driver_PWM(arm.PWM, MOTOR1A_PIN, MOTOR1B_PIN);
+    pico4drive.set_driver_PWM(arm.PWM, MOTOR2A_PIN, MOTOR2B_PIN);
+
+    carrosel.PWM = pico4drive.voltage_to_PWM(carrosel.u);
+    pico4drive.set_driver_PWM(carrosel.PWM, MOTOR1A_PIN, MOTOR1B_PIN);
+    
   
   //----------- Fim Do Código da Roda e do Braço------------------------------------------------
      
@@ -871,36 +928,52 @@ void loop()
       // Debug information
       serial_commands.send_command("dte", delta);
 
-      serial_commands.send_command("u1", arm.u);
-      
+      serial_commands.send_command("u1A", arm.u);
+      serial_commands.send_command("u1C", carrosel.u);
 
-      serial_commands.send_command("e1", arm.enc);
+      serial_commands.send_command("encA", arm.enc);
+      serial_commands.send_command("encC", carrosel.enc);
       
-
       serial_commands.send_command("Vbat", pico4drive.battery_voltage);
 
-      serial_commands.send_command("ve", arm.ve);
-      serial_commands.send_command("we", arm.we);
+      serial_commands.send_command("veA", arm.ve);
+      serial_commands.send_command("weA", arm.we);
 
-      serial_commands.send_command("w1", arm.we);
+      serial_commands.send_command("veC", carrosel.ve);
+      serial_commands.send_command("weC", carrosel.we);
 
-      serial_commands.send_command("p1", arm.p_e);
+      //serial_commands.send_command("w1", arm.we);
+
+      serial_commands.send_command("posA", arm.p_e);
+      serial_commands.send_command("posC", carrosel.p_e);
 
       serial_commands.send_command("sl", arm.solenoid_PWM);
 
-      serial_commands.send_command("mode", arm.control_mode);
+      serial_commands.send_command("modeA", arm.control_mode);
+      serial_commands.send_command("modeC", carrosel.control_mode);
 
-      serial_commands.send_command("kc", arm_PID.Kc);
-      serial_commands.send_command("ki", arm_PID.Ki);
-      serial_commands.send_command("kd", arm_PID.Kd);
-      serial_commands.send_command("kf", arm_PID.Kf);
+      serial_commands.send_command("kcA", arm_PID.Kc);
+      serial_commands.send_command("kiA", arm_PID.Ki);
+      serial_commands.send_command("kdA", arm_PID.Kd);
+      serial_commands.send_command("kfA", arm_PID.Kf);
 
-      serial_commands.send_command("kcp", arm_PID.Kc_p);
-      serial_commands.send_command("kip", arm_PID.Ki_p);
-      serial_commands.send_command("kdp", arm_PID.Kd_p);
-      serial_commands.send_command("kfp", arm_PID.Kf_p);
+      serial_commands.send_command("kcpA", arm_PID.Kc_p);
+      serial_commands.send_command("kipA", arm_PID.Ki_p);
+      serial_commands.send_command("kdpA", arm_PID.Kd_p);
+      serial_commands.send_command("kfpA", arm_PID.Kf_p);
 
-      serial_commands.send_command("st", arm.pfsm->state);
+      serial_commands.send_command("kcC", carrosel_PID.Kc);
+      serial_commands.send_command("kiC", carrosel_PID.Ki);
+      serial_commands.send_command("kdC", carrosel_PID.Kd);
+      serial_commands.send_command("kfC", carrosel_PID.Kf);
+
+      serial_commands.send_command("kcpC", carrosel_PID.Kc_p);
+      serial_commands.send_command("kipC", carrosel_PID.Ki_p);
+      serial_commands.send_command("kdpC", carrosel_PID.Kd_p);
+      serial_commands.send_command("kfpC", carrosel_PID.Kf_p);
+
+      serial_commands.send_command("stA", arm.pfsm->state);
+      serial_commands.send_command("stC", carrosel.pfsm->state);
 
       serial_commands.send_command("IP", WiFi.localIP().toString().c_str());
 
@@ -911,7 +984,8 @@ void loop()
       // serial_commands.send_command("pr", arm.IRLine.pos_right);
       // serial_commands.send_command("pl", arm.IRLine.pos_left);
 
-      serial_commands.send_command("m1", arm.PWM);
+      serial_commands.send_command("mA", arm.PWM);
+      serial_commands.send_command("mC", carrosel.PWM);
     
 
       pars_list.send_sparse_commands(serial_commands);

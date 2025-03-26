@@ -7,7 +7,7 @@
 
 motor_bench_t motor_bench;
 
-class Roda : public state_machine_t
+class Roda_t : public state_machine_t
 {
   virtual void next_state_rules(void)
   {
@@ -49,7 +49,7 @@ class Roda : public state_machine_t
     }
     else if (state == 1)
     { // Go: Get first box
-      bool next = carrosel.set_pos((carrosel.pos_req-1) * 90);
+      //bool next = carrosel.set_pos((carrosel.pos_req-1) * 90);
     }
     else if (state == 2)
     { // Turn Solenoid On and Get the Box
@@ -73,9 +73,9 @@ class Roda : public state_machine_t
   };
 };
 
-Roda roda;
+Roda_t roda;
 
-class Braço : public state_machine_t
+class Braço_t : public state_machine_t
 {
   virtual void next_state_rules(void)
   {
@@ -124,24 +124,29 @@ class Braço : public state_machine_t
   };
 };
 
-Braço braço;
+Braço_t braço;
 
-void init_control(arm_t &arm)
+void init_control(arm_t &arm, carrosel_t &carrosel)
 {
   arm.pfsm = &braço;
+  carrosel.pfsm = &roda;
   braço.set_new_state(300);
   braço.update_state();
+  roda.set_new_state(300);
+  roda.update_state();
   state_machines.register_state_machine(&braço);
+  state_machines.register_state_machine(&roda);
 }
 
-void control(arm_t &arm)
+void control(arm_t &arm, carrosel_t &carrosel)
 {
   arm.control_mode = arm_cm_pos;
+  carrosel.control_mode = carrosel_cm_pos;
 
   state_machines.step();
 }
 
-void init_control(carrosel_t &carrosel)
+/*void init_control(carrosel_t &carrosel)
 {
   carrosel.pfsm = &roda;
   roda.set_new_state(300);
@@ -154,4 +159,4 @@ void control(carrosel_t &carrosel)
   carrosel.control_mode = carrosel_cmc_pos;
 
   state_machines.step();
-}
+}*/
