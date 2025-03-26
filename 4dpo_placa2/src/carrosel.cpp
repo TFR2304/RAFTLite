@@ -22,8 +22,8 @@ carrosel_t::carrosel_t(void)
 
 void carrosel_t::odometry(void)
 {
- // Falta arranjar a constante adequada para a roda grande
- we = carrosel.enc1 * (TWO_PI / (64 * 2.0 * 1920.0));
+ 
+ we = carrosel.enc1 * (TWO_PI / (64 * 2.0 * 1920.0 * 11));
 }
 
 void carrosel_t::pos_update(void)

@@ -65,11 +65,11 @@ float PID_t::calc(float new_y_ref, float new_y)
   y = new_y;
   dy_ref = (new_y_ref - y_ref) / ppars->dt;
   y_ref = new_y_ref;
-  //y_filter = y_filter*a0 + b0*y_ref; //Reference filter
+  y_filter = y_filter*a0 + b0*y_ref; //Reference filter
   last_e = e;
 
-  //e = y_filter - y;
-  e = y_ref - y;
+  e = y_filter - y;
+  //e = y_ref - y;
   
   // Integral and derivative of the error
   Se += e * ppars->dt;
