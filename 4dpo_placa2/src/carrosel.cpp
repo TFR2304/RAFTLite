@@ -28,7 +28,8 @@ carrosel_t::carrosel_t(void)
 void carrosel_t::odometry(void)
 {
  
- we = carrosel.enc* (TWO_PI / (64 * 2.0 * 1920.0 * 11));
+ we = carrosel.enc * (TWO_PI / (64 * 2.0 * 1920.0 * 11));
+ p_e += we*dt;
 }
 
 void carrosel_t::pos_update(void)
@@ -74,7 +75,7 @@ void carrosel_t :: calcMotorsVoltage(void){
         if((abs(PID.pos_error)<0.005)&&(fabs(w1ref < 0.015))) u=0; //Cycle Oscillation Limiter
         else u = PID.calc(w1ref, we) + sign(w1ref) *  PID.ppars->dead_zone;
     }
-    else if(control_mode == carrosel_cm_pos)
+    else if(control_mode == carrosel_cm_voltage)
     {
         u = u_req;
         return;

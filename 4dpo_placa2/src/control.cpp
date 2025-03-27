@@ -68,7 +68,7 @@ class Roda_t : public state_machine_t
     }
     else if (state == 300)
     {
-      //carrosel.control_mode = cm_pos;
+      carrosel.control_mode = carrosel_cm_pos;
     }
   };
 };
