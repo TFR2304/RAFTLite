@@ -66,6 +66,10 @@ class Roda_t : public state_machine_t
       robot.solenoid_PWM = 180;
       robot.setRobotVW(0, 0, 2.5);
     }
+    else if (state == 201)
+    {
+      carrosel.control_mode = carrosel_cm_voltage;
+    }
     else if (state == 300)
     {
       carrosel.control_mode = carrosel_cm_pos;
@@ -116,6 +120,10 @@ class Braço_t : public state_machine_t
     else if (state == 3)
     { // LED off
       robot.led = 0;
+    }
+    else if (state == 201)
+    {
+      arm.control_mode = arm_cm_voltage;
     }
     else if (state == 300)
     {

@@ -184,11 +184,11 @@ void process_command(command_frame_t frame)
   }
   else if (frame.command_is("p1A"))
   {
-    arm.p_req = frame.value;
+    arm.p_req = (frame.value*TWO_PI)/360;
   }
   else if (frame.command_is("p1C"))
   {
-    carrosel.p_req = frame.value;
+    carrosel.p_req = (frame.value*TWO_PI)/360;
   }
   else if (frame.command_is("stA"))
   {
@@ -585,22 +585,22 @@ void setup()
   // PID INITIAL PARAMETERS
 
   arm_PID.Kf = 0.3;
-  arm_PID.Kc = 0.3636;
-  arm_PID.Ki = 2.5;
+  arm_PID.Kc = 2.15;
+  arm_PID.Ki = 3.3;
   arm_PID.Kd = 0;
   arm_PID.Kfd = 0;
-  arm_PID.Kc_p = 10.195;
-  arm_PID.Kd_p = 0.557;
+  arm_PID.Kc_p = 15;
+  arm_PID.Kd_p = 0.3;
   arm_PID.dt = 0.04;
   arm_PID.dead_zone = 0;
 
   carrosel_PID.Kf = 0.3;
-  carrosel_PID.Kc = 0.3636;
-  carrosel_PID.Ki = 2.5;
+  carrosel_PID.Kc = 2.5;
+  carrosel_PID.Ki = 4.5;
   carrosel_PID.Kd = 0;
   carrosel_PID.Kfd = 0;
-  carrosel_PID.Kc_p = 10.195;
-  carrosel_PID.Kd_p = 0.557;
+  carrosel_PID.Kc_p = 30;
+  carrosel_PID.Kd_p = 0.3;
   carrosel_PID.dt = 0.04;
   carrosel_PID.dead_zone = 0;
 
@@ -944,8 +944,8 @@ void loop()
 
       //serial_commands.send_command("w1", arm.we);
 
-      serial_commands.send_command("posA", arm.p_e);
-      serial_commands.send_command("posC", carrosel.p_e);
+      serial_commands.send_command("posA", ((arm.p_e*360)/TWO_PI));
+      serial_commands.send_command("posC", (carrosel.p_e*360)/TWO_PI);
 
       serial_commands.send_command("sl", arm.solenoid_PWM);
 
