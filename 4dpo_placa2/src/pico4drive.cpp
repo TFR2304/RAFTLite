@@ -37,6 +37,8 @@ int p4d_pwm_pins[4][2] = {{DRIVER_1A_PIN, DRIVER_1A_PIN},
 
 SerialPIO SerialTiny(SerialPIO::NOPIN, 21);
 
+pico4drive_t pico4drive;
+
 pico4drive_t::pico4drive_t()
 {
   analogWriteBits = 10; 

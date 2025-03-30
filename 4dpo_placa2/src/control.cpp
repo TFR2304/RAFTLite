@@ -120,6 +120,10 @@ class Braço_t : public state_machine_t
     { // LED off
       robot.led = 0;
     }
+    /* else if (state == 4)
+    {
+      //arm.pos_init();
+    } */
     else if (state == 201)
     {
       arm.control_mode = arm_cm_voltage;

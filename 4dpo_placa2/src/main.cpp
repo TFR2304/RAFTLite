@@ -28,7 +28,7 @@ uint8_t UdpOutPacket[UDP_MAX_SIZE]; // buffer for outgoing packets
 int UdpBufferSize = UDP_MAX_SIZE;
 
 #include "pico4drive.h"
-pico4drive_t pico4drive;
+//pico4drive_t pico4drive;
 
 #include "PicoEncoder.h"
 
@@ -530,7 +530,7 @@ void setup()
   encoders[3].begin(encoder_pins[3]);
 
   pico4drive.init();
-
+  
   analogReadResolution(10);
   // Register Commands
   pars_list.register_command("kfA", &(arm_PID.Kf));
@@ -667,10 +667,11 @@ void setup()
 
 #endif
 
+  
   set_interval(control_interval); // In seconds
   init_control(arm, carrosel);
-  //carrosel.carrosel_pos_init();
-  //arm.pos_init();
+  carrosel.carrosel_pos_init();
+  arm.pos_init();
   //init_control(carrosel);
 }
 
@@ -810,6 +811,7 @@ void good_loop()
 
 }
 
+bool csel_init = false;
 
 void loop()
 {
@@ -932,6 +934,8 @@ void loop()
     pico4drive.set_driver_PWM(robot.solenoid_PWM, SOLENOID_PIN_A, SOLENOID_PIN_B);
 
     readIRSensors(robot.IRLine);
+
+    //control(arm, carrosel);
     
     
     
@@ -940,6 +944,7 @@ void loop()
      
 
       // Debug information
+      serial_commands.send_command("swPin", digitalRead(SWITCH_PIN));
       serial_commands.send_command("dte", delta);
 
       serial_commands.send_command("u1A", arm.u);

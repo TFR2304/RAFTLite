@@ -1,5 +1,5 @@
 #include "arm.h"
-
+#include "pico4drive.h"
 #include <Arduino.h>
 #include <math.h>
 #include "IRLine.h"
@@ -7,12 +7,16 @@
 #include "trajectories.h"
 #include "robot.h"
 
+#define MOTOR2A_PIN 13
+#define MOTOR2B_PIN 12
+
 template <typename T> int sign(T val) 
 {
   return (T(0) < val) - (val < T(0));
 }
 
 arm_t arm;
+
 
 arm_t::arm_t()
 {
@@ -39,15 +43,22 @@ void arm_t::pos_update(void)
 
 void arm_t::pos_init(void)
 {
-    while(digitalRead(switchPIN))
-    {
-        control_mode = arm_cm_voltage;
-        u_req = 1; // o braço deverá mover-se de modo a ativar o interruptor
-    }
-    u_req = 0;
-    control_mode == arm_cm_pos;
-    p_e = 0;
 
+  while(digitalRead(switchPIN) == 1)
+  {
+      control_mode = arm_cm_voltage;
+      u_req = 1.5;
+      calcMotorsVoltage();
+      PWM = pico4drive.voltage_to_PWM(u);
+      pico4drive.set_driver_PWM(PWM, MOTOR2A_PIN, MOTOR2B_PIN); // o braço deverá mover-se de modo a ativar o interruptor
+  }
+  u_req = 0;
+  p_e = 0;
+  calcMotorsVoltage();
+  PWM = pico4drive.voltage_to_PWM(u);
+  pico4drive.set_driver_PWM(PWM, MOTOR2A_PIN, MOTOR2B_PIN);
+  control_mode = arm_cm_pos;
+  
 }
 
 void arm_t::set_pos(float pos)

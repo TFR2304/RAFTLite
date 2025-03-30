@@ -83,6 +83,6 @@ class pico4drive_t
     void update(void);
 };
 
-
+extern pico4drive_t pico4drive;
 
 #endif // PICO4DRIVE_H

@@ -1,6 +1,6 @@
 #include "carrosel.h"
 #include "robot.h"
-
+#include "pico4drive.h"
 #define Vel_Lenta 0.1
 #define Vel_Rapida 0.5
 
@@ -8,10 +8,24 @@
 #include <math.h>
 #include "IRLine.h"
 
+#define MOTOR1A_PIN 11
+#define MOTOR1B_PIN 10
+
 template <typename T> int sign(T val) 
 {
   return (T(0) < val) - (val < T(0));
 }
+
+void cpy_readIRSensors(IRLine_t &IRLine)
+{
+  byte c; // Read the five IR sensors using the AD converter
+  for (c = 0; c < IRSENSORS_COUNT; c++)
+  {
+    IRLine.IR_values[(IRSENSORS_COUNT - 1) - c] = 1023 - pico4drive.read_adc(3 + c);
+  }
+}
+
+
 
 carrosel_t carrosel;
 
@@ -39,14 +53,22 @@ void carrosel_t::pos_update(void)
 
 void carrosel_t::carrosel_pos_init(void)
 {
-  while (robot.IRLine.IR_values[0] > 60)
+  cpy_readIRSensors(IR);
+  while (IR.IR_values[2] > 60)
  {
   // Roda devagar se estiver perto da risca
+  cpy_readIRSensors(IR);
   control_mode = carrosel_cm_voltage;
-  u_req = 1;
+  u_req = 2.5;
+  calcMotorsVoltage();
+  PWM = pico4drive.voltage_to_PWM(u);
+  pico4drive.set_driver_PWM(PWM, MOTOR1A_PIN, MOTOR1B_PIN);
  }
  // Corrigir odometria
  u_req = 0;
+ calcMotorsVoltage();
+ PWM = pico4drive.voltage_to_PWM(u);
+ pico4drive.set_driver_PWM(PWM, MOTOR1A_PIN, MOTOR1B_PIN);
  control_mode = carrosel_cm_pos;
  p_e = 0;
 }
