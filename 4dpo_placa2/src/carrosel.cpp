@@ -110,6 +110,9 @@ void carrosel_t :: calcMotorsVoltage(void){
     
         if((abs(PID.pos_error)<0.005)&&(fabs(w1ref < 0.015))) u=0; //Cycle Oscillation Limiter
         else u = PID.calc(w1ref, we) + sign(w1ref) *  PID.ppars->dead_zone;
+
+        if (u > 2) u = 2;
+        if (u < -2) u = -2;
     }
     else if(control_mode == carrosel_cm_voltage)
     {
