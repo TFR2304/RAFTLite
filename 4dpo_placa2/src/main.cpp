@@ -43,7 +43,9 @@ pico4drive_t pico4drive;
 #define ENC3_PIN_B 7
 
 #define ENC4_PIN_A 8
-#define ENC4_PIN_B 9
+#define ENC4_PIN_B 10
+
+#define SWITCH_PIN 9
 
 #define NUM_ENCODERS 4
 PicoEncoder encoders[NUM_ENCODERS];
@@ -60,8 +62,8 @@ bool calibration_requested;
 #define MOTOR2A_PIN 13
 #define MOTOR2B_PIN 12
 
-#define MOTOR3A_PIN 15
-#define MOTOR3B_PIN 14
+#define SOLENOID_PIN_A 14
+#define SOLENOID_PIN_B 15
 
 #define MOTOR4A_PIN 17
 #define MOTOR4B_PIN 16
@@ -177,6 +179,10 @@ void process_command(command_frame_t frame)
   else if (frame.command_is("w1A"))
   {
     arm.w_req = -frame.value;
+  }
+  else if (frame.command_is("sl"))
+  {
+    robot.solenoid_PWM = frame.value;
   }
   else if (frame.command_is("w1C"))
   {
@@ -504,6 +510,8 @@ void setup()
   pinMode(ENC4_PIN_A, INPUT_PULLUP);
   pinMode(ENC4_PIN_B, INPUT_PULLUP);
 
+  pinMode(SWITCH_PIN, INPUT_PULLUP);
+
   pinMode(TEST_PIN, OUTPUT);
 
   pinMode(MOTOR1A_PIN, OUTPUT);
@@ -512,10 +520,8 @@ void setup()
   pinMode(MOTOR2A_PIN, OUTPUT);
   pinMode(MOTOR2B_PIN, OUTPUT);
 
-  pinMode(MOTOR3A_PIN, OUTPUT);
-  pinMode(MOTOR3B_PIN, OUTPUT);
-  pinMode(MOTOR4A_PIN, OUTPUT);
-  pinMode(MOTOR4B_PIN, OUTPUT);
+  pinMode(SOLENOID_PIN_A, OUTPUT);
+  pinMode(SOLENOID_PIN_B, OUTPUT);
 
   // Encoders Setup
   encoders[0].begin(encoder_pins[0]);
@@ -663,6 +669,8 @@ void setup()
 
   set_interval(control_interval); // In seconds
   init_control(arm, carrosel);
+  //carrosel.carrosel_pos_init();
+  //arm.pos_init();
   //init_control(carrosel);
 }
 
@@ -920,6 +928,12 @@ void loop()
 
     carrosel.PWM = pico4drive.voltage_to_PWM(carrosel.u);
     pico4drive.set_driver_PWM(carrosel.PWM, MOTOR1A_PIN, MOTOR1B_PIN);
+
+    pico4drive.set_driver_PWM(robot.solenoid_PWM, SOLENOID_PIN_A, SOLENOID_PIN_B);
+
+    readIRSensors(robot.IRLine);
+    
+    
     
   
   //----------- Fim Do Código da Roda e do Braço------------------------------------------------
@@ -947,7 +961,7 @@ void loop()
       serial_commands.send_command("posA", ((arm.p_e*360)/TWO_PI));
       serial_commands.send_command("posC", (carrosel.p_e*360)/TWO_PI);
 
-      serial_commands.send_command("sl", arm.solenoid_PWM);
+      serial_commands.send_command("sl", robot.solenoid_PWM);
 
       serial_commands.send_command("modeA", arm.control_mode);
       serial_commands.send_command("modeC", carrosel.control_mode);
@@ -971,6 +985,13 @@ void loop()
       serial_commands.send_command("kipC", carrosel_PID.Ki_p);
       serial_commands.send_command("kdpC", carrosel_PID.Kd_p);
       serial_commands.send_command("kfpC", carrosel_PID.Kf_p);
+
+      serial_commands.send_command("IRB0", robot.IRLine.IR_values[0]);
+      serial_commands.send_command("IRB1", robot.IRLine.IR_values[1]);
+      serial_commands.send_command("IRB2", robot.IRLine.IR_values[2]);
+      serial_commands.send_command("IRB3", robot.IRLine.IR_values[3]);
+      serial_commands.send_command("IRB4", robot.IRLine.IR_values[4]);
+      serial_commands.send_command("IRB5", robot.IRLine.IR_values[5]);
 
       serial_commands.send_command("stA", arm.pfsm->state);
       serial_commands.send_command("stC", carrosel.pfsm->state);

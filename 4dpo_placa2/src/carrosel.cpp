@@ -1,4 +1,5 @@
 #include "carrosel.h"
+#include "robot.h"
 
 #define Vel_Lenta 0.1
 #define Vel_Rapida 0.5
@@ -36,6 +37,19 @@ void carrosel_t::pos_update(void)
 {
 }
 
+void carrosel_t::carrosel_pos_init(void)
+{
+  while (robot.IRLine.IR_values[0] > 60)
+ {
+  // Roda devagar se estiver perto da risca
+  control_mode = carrosel_cm_voltage;
+  u_req = 1;
+ }
+ // Corrigir odometria
+ u_req = 0;
+ control_mode = carrosel_cm_pos;
+ p_e = 0;
+}
 /* bool carrosel_t::set_pos(float pos)
 {
   while (carrosel.IR.IR_values[0] < 300)

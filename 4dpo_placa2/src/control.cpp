@@ -12,10 +12,9 @@ class Roda_t : public state_machine_t
   virtual void next_state_rules(void)
   {
     // Parado - apenas sai do estado se o mudarmos manualmente
-    if (state == 0)
+    if (state == 0 && tis > 10)
     {
-      carrosel.w_req = 0;
-      set_new_state(0);
+      set_new_state(1);
     }
     // Set_Pos
     else if (state == 1 && robot.tof_dist < 0.04)
@@ -45,7 +44,7 @@ class Roda_t : public state_machine_t
     // Actions in each state
     if (state == 0)
     { // Carrosel Parado
-      carrosel.set_w(0);
+      //carrosel.carrosel_pos_init();
     }
     else if (state == 1)
     { // Go: Get first box

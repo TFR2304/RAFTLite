@@ -37,16 +37,16 @@ void arm_t::pos_update(void)
 
 }
 
-void pos_init(void)
+void arm_t::pos_init(void)
 {
-    while(!digitalRead(switchPIN))
+    while(digitalRead(switchPIN))
     {
-        arm.control_mode = arm_cm_voltage;
-        arm.u_req = 0.5; // o braço deverá mover-se de modo a ativar o interruptor
+        control_mode = arm_cm_voltage;
+        u_req = 1; // o braço deverá mover-se de modo a ativar o interruptor
     }
-    arm.u_req = 0;
-    arm.control_mode == arm_cm_pos;
-    arm.p_e = 0;
+    u_req = 0;
+    control_mode == arm_cm_pos;
+    p_e = 0;
 
 }
 

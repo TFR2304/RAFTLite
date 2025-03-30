@@ -43,6 +43,7 @@ public:
  void pos_update(void);
  bool set_pos(float pos);
  void set_w(float w);
+ void carrosel_pos_init(void);
  void calcMotorsVoltage(void);
 
  void send_command(const char *command, float par);
