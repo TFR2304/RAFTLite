@@ -11,31 +11,31 @@ class Roda_t : public state_machine_t
   virtual void next_state_rules(void)
   {
     // idle
-    if (state == 0 && tis > 5)
+    if (state == 0 && tis > 4)
     {
       set_new_state(1);
     }
     // pick
-    else if (state == 1 && tis > 5)
+    else if (state == 1 && tis > 3.5)
     {
       set_new_state(2);
     }
-    else if (state == 2 && tis > 5)
+    else if (state == 2 && tis > 1)
     {
       set_new_state(3);
     }
     // store
-    else if (state == 3 && tis > 5)
+    else if (state == 3 && tis > 4.5)
     {
       set_new_state(4);
     }
-    else if (state == 4 && tis > 5  && carrosel.counter < 3 )
+    else if (state == 4 && tis > 1  && carrosel.counter < 3 )
     {
       carrosel.counter++;
       set_new_state(0);
     }
     // pick from carrosel
-    else if (state == 4 && tis > 5)
+    else if (state == 4 && tis > 1)
     {
       set_new_state(5);
     }
@@ -43,33 +43,33 @@ class Roda_t : public state_machine_t
     {
       set_new_state(6);
     }
-    else if (state == 6 && tis > 5)
+    else if (state == 6 && tis > 2)
     {
       set_new_state(7);
     }
-    else if (state == 7 && tis > 5)
+    else if (state == 7 && tis > 4)
     {
       set_new_state(8);
     }
     //drop
-    else if (state == 8 && tis > 5)
+    else if (state == 8 && tis > 1)
     {
       set_new_state(9);
     }
-    else if (state == 9 && tis > 5)
+    else if (state == 9 && tis > 4.5)
     {
       set_new_state(10);
     }
-    else if (state == 10 && tis > 5)
+    else if (state == 10 && tis > 4.5)
     {
       set_new_state(11);
     }
-    else if (state == 11 && tis > 5 && carrosel.counter  > 0)
+    else if (state == 11 && tis > 1 && carrosel.counter  > 0)
     {
       carrosel.counter--;
       set_new_state(5);
     }
-    else if (state == 11 && tis > 5)
+    else if (state == 11 && tis > 1)
     {
       set_new_state(12);
     }
@@ -87,12 +87,12 @@ class Roda_t : public state_machine_t
     if (state == 0)
     { 
       arm.set_pos(-45);
-      carrosel.set_pos(carrosel.idle_pos[carrosel.counter]);
+      carrosel.set_pos(carrosel.idle_pos[carrosel.counter] );
     }
     else if (state == 1)
     { 
       arm.set_pos(-2);
-      carrosel.set_pos(carrosel.pick1_pos[carrosel.counter] ) ;
+      carrosel.set_pos(carrosel.pick1_pos[carrosel.counter] -10) ;
     }
     else if (state == 2)
     { 
