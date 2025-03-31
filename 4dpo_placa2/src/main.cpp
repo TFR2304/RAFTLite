@@ -7,9 +7,6 @@
 #include <WiFi.h>
 #include <WiFiUdp.h>
 
-#include <LittleFS.h>
-#include "http_ota.h"
-
 #define max_wifi_str 32
 
 char ssid[max_wifi_str];
@@ -90,7 +87,6 @@ VL53L0X tof;
 INA226_WE ina226 = INA226_WE(0x40);
 #endif
 
-#include "robot.h"
 #include "arm.h"
 #include "carrosel.h"
 
@@ -102,8 +98,6 @@ void control(arm_t &arm, carrosel_t &carrosel);
 
 //void init_control(carrosel_t  &carrosel);
 //void control(carrosel_t &carrosel);
-
-#include "trajectories.h"
 
 PID_pars_t arm_PID, carrosel_PID;
 
@@ -124,10 +118,10 @@ void readIRSensors(IRLine_t &IRLine)
 uint32_t encodeIRSensors(void)
 {
   byte c;                                           // Encode five IR sensors with 6 bits for each sensor
-  uint32_t result = robot.IRLine.IR_values[0] >> 4; // From 10 bits to 6 bits
+  uint32_t result = carrosel.IR.IR_values[0] >> 4; // From 10 bits to 6 bits
   for (c = 1; c < 5; c++)
   {
-    result = (result << 6) | (robot.IRLine.IR_values[c] >> 4);
+    result = (result << 6) | (carrosel.IR.IR_values[c] >> 4);
   }
   return result;
 }
@@ -182,7 +176,7 @@ void process_command(command_frame_t frame)
   }
   else if (frame.command_is("sl"))
   {
-    robot.solenoid_PWM = frame.value;
+    carrosel.solenoid_PWM = frame.value;
   }
   else if (frame.command_is("w1C"))
   {
@@ -230,14 +224,6 @@ void process_command(command_frame_t frame)
   {
     arm.solenoid_PWM = frame.value;
   }
-  else if (frame.command_is("xt"))
-  {
-    traj.xt = frame.value;
-  }
-  else if (frame.command_is("yt"))
-  {
-    traj.yt = frame.value;
-  }
   else if (frame.command_is("pl"))
   {
     // load_commands(pars_fname, serial_commands);
@@ -272,16 +258,6 @@ void process_command(command_frame_t frame)
       WiFi.end();
     }
   }
-  else if (frame.command_is("httpota"))
-  {
-    if (WiFi.connected())
-    {
-      http_ota.host = frame.text;
-      http_ota.uri = "/picoarm/firmware.bin";
-      arm.stoped = true;
-      http_ota.requested = true;
-    }
-  }
   else if (frame.command_is("cal"))
   {
     calibration_requested = true;
@@ -290,38 +266,6 @@ void process_command(command_frame_t frame)
   } // Put here more commands...
 }
 
-void send_file(const char *filename, int log_high)
-{
-  File f;
-  f = LittleFS.open(filename, "r");
-  if (!f)
-  {
-    serial_commands.send_command("err", filename);
-    return;
-  }
-
-  serial_commands.flush();
-  Serial.flush();
-
-  int c;
-  byte b, mask;
-  if (log_high)
-    mask = 0x80;
-  else
-    mask = 0;
-
-  while (1)
-  {
-    c = f.read(&b, 1);
-    if (c != 1)
-      break;
-    serial_commands.send_char(b | mask);
-  }
-  f.close();
-
-  serial_commands.flush();
-  Serial.flush();
-}
 
 // void init_PIO_dual_encoders(int enc1_pin_A, int enc2_pin_A);
 // int read_PIO_encoder(int sm);
@@ -388,107 +332,8 @@ void wifi_list(void)
   }
 }
 
-/*
-void init_OTA(void)
-{
-  ArduinoOTA.setPort(2040); // this is default for RP 2040
 
-  ArduinoOTA.onStart([]() {
-    String type;
-    if (ArduinoOTA.getCommand() == U_FLASH) {
-      type = "sketch";
-    } else {  // U_FS
-      type = "filesystem";
-    }
-    // NOTE: if updating FS this would be the place to unmount FS using FS.end()
-    Serial.println("Start updating " + type);
-  });
 
-  ArduinoOTA.onEnd([]() { Serial.println("\nEnd"); });
-
-  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-  });
-
-  ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) {
-      Serial.println("Auth Failed");
-    } else if (error == OTA_BEGIN_ERROR) {
-      Serial.println("Begin Failed");
-    } else if (error == OTA_CONNECT_ERROR) {
-      Serial.println("Connect Failed");
-    } else if (error == OTA_RECEIVE_ERROR) {
-      Serial.println("Receive Failed");
-    } else if (error == OTA_END_ERROR) {
-      Serial.println("End Failed");
-    }
-  });
-
-  ArduinoOTA.begin();
-}*/
-
-#ifdef HAS_INA266
-int setup_ina226(void)
-{
-  // Set Number of measurements for shunt and bus voltage which shall be averaged
-  //* Mode *     * Number of samples *
-  // AVERAGE_1            1 (default)
-  // AVERAGE_4            4
-  // AVERAGE_16          16
-  // AVERAGE_64          64
-  // AVERAGE_128        128
-  // AVERAGE_256        256
-  // AVERAGE_512        512
-  // AVERAGE_1024      1024
-
-  // ina226.setAverage(AVERAGE_64); // choose mode and uncomment for change of default
-  ina226.setAverage(AVERAGE_4); // choose mode and uncomment for change of default
-
-  // Set conversion time in microseconds
-  // One set of shunt and bus voltage conversion will take:
-  // number of samples to be averaged x conversion time x 2
-  //
-  // * Mode *         * conversion time *
-  // CONV_TIME_140          140 µs
-  // CONV_TIME_204          204 µs
-  // CONV_TIME_332          332 µs
-  // CONV_TIME_588          588 µs
-  // CONV_TIME_1100         1.1 ms (default)
-  // CONV_TIME_2116       2.116 ms
-  // CONV_TIME_4156       4.156 ms
-  // CONV_TIME_8244       8.244 ms
-
-  // ina226.setConversionTime(CONV_TIME_1100); //choose conversion time and uncomment for change of default
-  ina226.setConversionTime(CONV_TIME_4156);
-  // ina226.setConversionTime(CONV_TIME_204);
-
-  // Set measure mode
-  // POWER_DOWN - INA226 switched off
-  // TRIGGERED  - measurement on demand
-  // CONTINUOUS  - continuous measurements (default)
-
-  // ina226.setMeasureMode(CONTINUOUS); // choose mode and uncomment for change of default
-
-  // Set Current Range
-  //* Mode *   * Max Current *
-  // MA_400          400 mA
-  // MA_800          800 mA (default)
-
-  // ina226.setCurrentRange(MA_800); // choose gain and uncomment for change of default
-
-  // If the current values delivered by the INA226 differ by a constant factor
-  // from values obtained with calibrated equipment you can define a correction factor.
-  // Correction factor = current delivered from calibrated equipment / current delivered by INA226
-
-  // ina226.setCorrectionFactor(0.95);
-
-  Serial.println("INA226 Current Sensor - Continuous");
-
-  ina226.waitUntilConversionCompleted(); // if you comment this line the first data might be zero
-  return 1;
-}
-#endif
 
 /*
 
@@ -556,18 +401,13 @@ void setup()
   pars_list.register_command("kfdpA", &(arm_PID.Kfd_p));
   pars_list.register_command("kfdpC", &(carrosel_PID.Kfd_p));
 
-  pars_list.register_command("at", &(traj.thetat));
-  pars_list.register_command("xt", &(traj.xt));
-  pars_list.register_command("yt", &(traj.yt));
 
-  pars_list.register_command("xi", &(traj.xi));
-  pars_list.register_command("yi", &(traj.yi));
 
-  pars_list.register_command("cx", &(traj.cx));
-  pars_list.register_command("cy", &(traj.cy));
+
+
+
 
   // pars_list.register_command("fk", &(arm.i_lambda));
-  pars_list.register_command("kt", &(traj.ktheta));
   // pars_list.register_command("ssid", ssid, max_wifi_str);
   // pars_list.register_command("pass", password, max_wifi_str);
 
@@ -584,7 +424,6 @@ void setup()
   Serial.begin(115200);
   Serial1.begin(115200);
 
-  LittleFS.begin();
 
   float control_interval = 0.04; // In seconds
 
@@ -674,7 +513,6 @@ void setup()
   arm.pos_init();
   //init_control(carrosel);
 }
-
 /*
 
 
@@ -684,133 +522,6 @@ void setup()
 
 
 */
-
-void good_loop()
-{
-
-  uint32_t now = micros();
-  uint32_t delta = now - last_cycle;
-  if (delta >= interval) {
-    loop_micros = micros();
-    last_cycle = now;
-
-    debug = serial_commands.out_count;
-    if (WiFi.connected() && !ip_on)
-  {
-    // Connection established
-    serial_commands.send_command("msg", (String("Pico W is connected to WiFi network with SSID ") + WiFi.SSID()).c_str());
-
-    // Print IP Address
-    ip_on = Udp.begin(localUdpPort);
-    Serial.printf("Now listening at IP %s, UDP port %d\n", WiFi.localIP().toString().c_str(), localUdpPort);
-  }
-
-
-  if (ip_on)
-  {
-    // ArduinoOTA.handle();
-
-    int packetSize = Udp.parsePacket();
-    if (packetSize)
-    {
-      int i;
-      udp_on = 1;
-      // receive incoming UDP packets
-
-      // Serial.printf("Received %d bytes from %s, port %d\n", packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
-      int len = Udp.read(UdpInPacket, UdpBufferSize - 1);
-      if (len > 0)
-      {
-        UdpInPacket[len] = 0;
-      }
-      // Serial.printf("UDP packet contents (as string): %s\n", UdpInPacket);
-
-      for (i = 0; i < len; i++)
-      {
-        udp_commands.process_char(UdpInPacket[i]);
-        // Serial.write(UdpInPacket[i]);
-      }
-    }
-  }
-
-  uint8_t b;
-  if (Serial.available())
-  { // Only do this if there is serial data to be read
-
-    b = Serial.read();
-    serial_commands.process_char(b);
-    // Serial.write(b);
-  }
-
-  if (Serial1.available())
-  { // Only do this if there is serial data to be read
-
-    b = Serial1.read();
-    serial1_commands.process_char(b);
-    // Serial.write(b);
-  }
-
-  pico4drive.update();
-
-  if (load_pars_requested)
-  {
-    load_commands(pars_fname, serial_commands);
-    load_pars_requested = false;
-  }
-
-  // Do this only every "interval" microseconds
-    int32_t now = micros();
-    uint32_t delta = now - last_cycle;
-      loop_micros = micros();
-      last_cycle = now;
-      // last_cycle += interval;
-  
-  
-  #ifdef HAS_VL53L0X
-    if (tof.readRangeAvailable())
-    {
-      arm.prev_tof_dist = arm.tof_dist;
-      arm.tof_dist = tof.readRangeMillimeters() * 1e-3;
-    }
-  #endif
-  
-  #ifdef HAS_INA266
-    ina226.readAndClearFlags();
-    float shuntVoltage_mV = ina226.getShuntVoltage_mV();
-    float busVoltage_V = ina226.getBusVoltage_V();
-    float current_mA = -ina226.getCurrent_mA();
-    // float power_mW = ina226.getBusPower();
-    // float loadVoltage_V  = busVoltage_V + (shuntVoltage_mV/1000);
-  
-    arm.i_sense = arm.i_lambda * arm.i_sense + (1 - arm.i_lambda) * current_mA * 1e-3;
-    arm.u_sense = busVoltage_V * 1000;
-  #endif
-  
-    //----------- Código Para Roda e Braço -------------------------------------------------------
-    // Read and process sensors
-  
-    read_PIO_encoders();
-  
-     
-    arm.odometry();
-    control(arm, carrosel);
-
-    arm.p = arm.p_req;
-    arm.calcMotorsVoltage();
-
-    arm.PWM = pico4drive.voltage_to_PWM(arm.u);
-    pico4drive.set_driver_PWM(arm.PWM, MOTOR1A_PIN, MOTOR1B_PIN);
-
-    serial_commands.send_command("dbg", 5);
-    serial_commands.send_command("loop", micros() - loop_micros);
-    serial_commands.flush();
-    Serial.println();
-
-  }
-
-
-}
-
 bool csel_init = false;
 
 void loop()
@@ -931,9 +642,9 @@ void loop()
     carrosel.PWM = pico4drive.voltage_to_PWM(carrosel.u);
     pico4drive.set_driver_PWM(carrosel.PWM, MOTOR1A_PIN, MOTOR1B_PIN);
 
-    pico4drive.set_driver_PWM(robot.solenoid_PWM, SOLENOID_PIN_A, SOLENOID_PIN_B);
+    pico4drive.set_driver_PWM(carrosel.solenoid_PWM, SOLENOID_PIN_A, SOLENOID_PIN_B);
 
-    readIRSensors(robot.IRLine);
+    readIRSensors(carrosel.IR);
 
     //control(arm, carrosel);
     
@@ -966,7 +677,7 @@ void loop()
       serial_commands.send_command("posA", ((arm.p_e*360)/TWO_PI));
       serial_commands.send_command("posC", (carrosel.p_e*360)/TWO_PI);
 
-      serial_commands.send_command("sl", robot.solenoid_PWM);
+      serial_commands.send_command("sl", carrosel.solenoid_PWM);
 
       serial_commands.send_command("modeA", arm.control_mode);
       serial_commands.send_command("modeC", carrosel.control_mode);
@@ -991,15 +702,16 @@ void loop()
       serial_commands.send_command("kdpC", carrosel_PID.Kd_p);
       serial_commands.send_command("kfpC", carrosel_PID.Kf_p);
 
-      serial_commands.send_command("IRB0", robot.IRLine.IR_values[0]);
-      serial_commands.send_command("IRB1", robot.IRLine.IR_values[1]);
-      serial_commands.send_command("IRB2", robot.IRLine.IR_values[2]);
-      serial_commands.send_command("IRB3", robot.IRLine.IR_values[3]);
-      serial_commands.send_command("IRB4", robot.IRLine.IR_values[4]);
-      serial_commands.send_command("IRB5", robot.IRLine.IR_values[5]);
+      serial_commands.send_command("IRB0", carrosel.IR.IR_values[0]);
+      serial_commands.send_command("IRB1", carrosel.IR.IR_values[1]);
+      serial_commands.send_command("IRB2", carrosel.IR.IR_values[2]);
+      serial_commands.send_command("IRB3", carrosel.IR.IR_values[3]);
+      serial_commands.send_command("IRB4", carrosel.IR.IR_values[4]);
+      serial_commands.send_command("IRB5", carrosel.IR.IR_values[5]);
 
       serial_commands.send_command("stA", arm.pfsm->state);
       serial_commands.send_command("stC", carrosel.pfsm->state);
+      serial_commands.send_command("caixa", carrosel.counter);
 
       serial_commands.send_command("IP", WiFi.localIP().toString().c_str());
 
@@ -1007,8 +719,8 @@ void loop()
 
       // serial_commands.send_command("d0", arm.tof_dist);
 
-      // serial_commands.send_command("pr", arm.IRLine.pos_right);
-      // serial_commands.send_command("pl", arm.IRLine.pos_left);
+      // serial_commands.send_command("pr", arm.IR.pos_right);
+      // serial_commands.send_command("pl", arm.IR.pos_left);
 
       serial_commands.send_command("mA", arm.PWM);
       serial_commands.send_command("mC", carrosel.PWM);
@@ -1027,15 +739,13 @@ void loop()
       serial_commands.flush();
       Serial.println();
 
-      serial1_commands.send_command("IRB0", robot.IRLine_Back.IR_values[0]);
-      serial1_commands.send_command("IRB1", robot.IRLine_Back.IR_values[1]);
-      serial1_commands.send_command("IRB2", robot.IRLine_Back.IR_values[2]);
-      serial1_commands.send_command("IRB3", robot.IRLine_Back.IR_values[3]);
-      serial1_commands.send_command("IRB4", robot.IRLine_Back.IR_values[4]);
-      serial1_commands.send_command("IRB5", robot.IRLine_Back.IR_values[5]);
+      serial1_commands.send_command("IRB0", carrosel.IR.IR_values[0]);
+      serial1_commands.send_command("IRB1", carrosel.IR.IR_values[1]);
+      serial1_commands.send_command("IRB2", carrosel.IR.IR_values[2]);
+      serial1_commands.send_command("IRB3", carrosel.IR.IR_values[3]);
+      serial1_commands.send_command("IRB4", carrosel.IR.IR_values[4]);
+      serial1_commands.send_command("IRB5", carrosel.IR.IR_values[5]);
 
       serial1_commands.flush();
-
-      http_ota.handle();
   }
 }

@@ -4,8 +4,6 @@
 #include <math.h>
 #include "IRLine.h"
 #include <math.h>
-#include "trajectories.h"
-#include "robot.h"
 
 #define MOTOR2A_PIN 13
 #define MOTOR2B_PIN 12
@@ -63,7 +61,7 @@ void arm_t::pos_init(void)
 
 void arm_t::set_pos(float pos)
 {
-    p = pos;
+  p_req = (pos*TWO_PI)/360;
 }
 
 void arm_t::calcMotorsVoltage(void)

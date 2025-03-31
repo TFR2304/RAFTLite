@@ -20,6 +20,7 @@ public:
  float ve, we;
  // impulsos contados
  int enc;
+ //int counter;
  // tensão motor
  float u, u_req;
  float PWM;

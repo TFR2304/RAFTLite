@@ -1,5 +1,4 @@
 #include "carrosel.h"
-#include "robot.h"
 #include "pico4drive.h"
 #define Vel_Lenta 0.1
 #define Vel_Rapida 0.5
@@ -31,10 +30,36 @@ carrosel_t carrosel;
 
 carrosel_t::carrosel_t(void)
 {
- for (int i = 0; i < 4; i++)
- {
-  idx_pos[i] = 90 * i;
- }
+ idle_pos[0] = -10;
+ idle_pos[1] = -106;
+ idle_pos[2] = -192;
+ idle_pos[3] = -285;
+
+ pick1_pos[0] = -10;
+ pick1_pos[1] = -106;
+ pick1_pos[2] = -192;
+ pick1_pos[3] = -285;
+
+ store_pos[0] = -14;
+ store_pos[1] = -110;
+ store_pos[2] = -197;
+ store_pos[3] = -290;
+
+ pick2_pos[3] = -344;
+ pick2_pos[2] = -255;
+ pick2_pos[1] = -164;
+ pick2_pos[0] = -71;
+
+ pre_pos[3] = -302;
+ pre_pos[2] = -209;
+ pre_pos[1] = -122;
+ pre_pos[0] = -29;
+
+ drop_pos[0] = 7;
+ drop_pos[1] = -86;
+ drop_pos[2] = -173;
+ drop_pos[3] = -276;
+ counter = 0;
  p_e = 0;
  ve = 0;
  we = 0;
@@ -49,6 +74,11 @@ void carrosel_t::odometry(void)
 
 void carrosel_t::pos_update(void)
 {
+}
+
+void carrosel_t::set_pos(float pos)
+{
+  p_req = (pos*TWO_PI)/360;
 }
 
 void carrosel_t::carrosel_pos_init(void)

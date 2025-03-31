@@ -17,6 +17,7 @@ public:
  float ve, we;
  // impulsos contados
  int enc;
+ int counter;
  // tensão motor
  float u, u_req;
  float PWM;
@@ -27,7 +28,12 @@ public:
  float p_e; //posição estimada
  float dt;
 
- int idx_pos[4];
+ int idle_pos[4];
+ int pick1_pos[4];
+ int store_pos[4];
+ int pre_pos[4];
+ int pick2_pos[4];
+ int drop_pos[4];
 
  float solenoid_PWM;
  bool stoped;
@@ -41,7 +47,7 @@ public:
 
  void odometry(void);
  void pos_update(void);
- bool set_pos(float pos);
+ void set_pos(float pos);
  void set_w(float w);
  void carrosel_pos_init(void);
  void calcMotorsVoltage(void);

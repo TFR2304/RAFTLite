@@ -3,7 +3,6 @@
 #include "arm.h"
 #include "state_machines.h"
 #include "motor_bench.h"
-#include "trajectories.h"
 
 motor_bench_t motor_bench;
 
@@ -11,31 +10,80 @@ class Roda_t : public state_machine_t
 {
   virtual void next_state_rules(void)
   {
-    // Parado - apenas sai do estado se o mudarmos manualmente
-    if (state == 0 && tis > 10)
+    // idle
+    if (state == 0 && tis > 5)
     {
       set_new_state(1);
     }
-    // Set_Pos
-    else if (state == 1 && robot.tof_dist < 0.04)
+    // pick
+    else if (state == 1 && tis > 5)
     {
       set_new_state(2);
     }
-    // Set_W
-    else if (state == 2 && tis > 0.1)
+    else if (state == 2 && tis > 5)
     {
-      robot.rel_s = 0;
       set_new_state(3);
     }
-    else if (state == 3 && robot.rel_s < -0.12)
+    // store
+    else if (state == 3 && tis > 5)
     {
-      robot.rel_theta = 0;
       set_new_state(4);
     }
-    else if (state == 4 && robot.rel_theta > radians(170))
+    else if (state == 4 && tis > 5 )
     {
-      set_new_state(0);
-      robot.IRLine.crosses = 0;
+      set_new_state(1);
+
+    }
+    else if (state == 5 && tis > 5 && carrosel.counter < 3)
+    {
+      //carrosel.counter = 0;
+      set_new_state(5);
+      carrosel.counter++;
+    }
+    // pick
+    else if (state == 5 && tis > 5)
+    {
+      set_new_state(6);
+    }
+    else if (state == 6 && tis > 5)
+    {
+      set_new_state(7);
+    }
+    // pre
+    else if (state == 7 && tis > 5)
+    {
+      set_new_state(8);
+    }
+    else if (state == 8 && tis > 5)
+    {
+      set_new_state(9);
+    }
+    else if (state == 9 && tis > 5)
+    {
+      set_new_state(5);
+
+    }
+    else if (state == 9 && tis > 5)
+    {
+      set_new_state(10);
+    }
+    else if (state == 10 && tis > 5)
+    {
+      set_new_state(11);
+    }
+    else if (state == 11 && tis > 5  && carrosel.counter < 3)
+    {
+      set_new_state(6);
+      carrosel.counter--;
+    }
+    else if (state == 11 && tis > 10)
+    {
+      set_new_state(12);
+    }
+    //end
+    else if (state == 12)
+    {
+      set_new_state(12);
     }
   };
 
@@ -43,31 +91,69 @@ class Roda_t : public state_machine_t
   {
     // Actions in each state
     if (state == 0)
-    { // Carrosel Parado
-      //carrosel.carrosel_pos_init();
+    { 
+      arm.set_pos(-45);
+      carrosel.set_pos(-10);
+      carrosel.counter = 0;
     }
     else if (state == 1)
-    { // Go: Get first box
-      //bool next = carrosel.set_pos((carrosel.pos_req-1) * 90);
+    { 
+      arm.set_pos(-2);
+      carrosel.set_pos(carrosel.idle_pos[carrosel.counter] ) ;
     }
     else if (state == 2)
-    { // Turn Solenoid On and Get the Box
-      robot.solenoid_PWM = 180;
-      robot.followLineLeft(robot.follow_v, robot.follow_k);
+    { 
+      carrosel.solenoid_PWM = 1000;
     }
     else if (state == 3)
-    { // Go back with the box
-      robot.solenoid_PWM = 180;
-      robot.setRobotVW(-0.1, 0, 0);
+    { 
+      arm.set_pos(-67);
+      carrosel.set_pos(carrosel.pick1_pos[carrosel.counter]);
+      carrosel.solenoid_PWM = 1000;
     }
     else if (state == 4)
-    { // Turn arround
-      robot.solenoid_PWM = 180;
-      robot.setRobotVW(0, 0, 2.5);
+    { 
+      arm.set_pos(-67);
+      carrosel.set_pos(carrosel.store_pos[carrosel.counter]);
+      carrosel.solenoid_PWM = 1000;
     }
-    else if (state == 201)
+    else if (state == 5)
+    { 
+      carrosel.solenoid_PWM = 0;
+    }
+    else if (state == 6)
+    { 
+      arm.set_pos(-80);
+    }
+    else if (state == 7)
     {
-      carrosel.control_mode = carrosel_cm_voltage;
+      carrosel.set_pos(carrosel.pick2_pos[carrosel.counter]);
+    }
+    else if (state == 8)
+    {
+      carrosel.solenoid_PWM = 1000;
+    }
+    else if (state == 9)
+    {
+      arm.set_pos(-80);
+      carrosel.set_pos(carrosel.pre_pos[carrosel.counter]);
+      carrosel.solenoid_PWM = 1000;
+    }
+    else if (state == 10)
+    {
+      arm.set_pos(-5);
+      carrosel.set_pos(carrosel.drop_pos[carrosel.counter] + 34);
+      carrosel.solenoid_PWM = 1000;
+    }
+    else if (state == 11)
+    {
+      carrosel.solenoid_PWM = 0;
+
+    }
+    else if (state == 12)
+    {
+      arm.set_pos(-45);
+      carrosel.set_pos(-10);
     }
     else if (state == 300)
     {
@@ -78,74 +164,12 @@ class Roda_t : public state_machine_t
 
 Roda_t roda;
 
-class Braço_t : public state_machine_t
-{
-  virtual void next_state_rules(void)
-  {
-    // Rules for the state evolution
-    if (state == 0 && tis > 0.1)
-    {
-      set_new_state(1);
-    }
-    else if (state == 1 && tis > 0.2)
-    {
-      set_new_state(2);
-    }
-    else if (state == 2 && tis > 0.2)
-    {
-      set_new_state(3);
-    }
-    else if (state == 3 && tis > 0.6)
-    {
-      set_new_state(0);
-    }
-  };
-
-  virtual void state_actions_rules(void)
-  {
-    // Actions in each state
-    if (state == 0)
-    { // LED on
-      robot.led = 1;
-    }
-    else if (state == 1)
-    { // LED off
-      robot.led = 0;
-    }
-    else if (state == 2)
-    { // LED on
-      robot.led = 1;
-    }
-    else if (state == 3)
-    { // LED off
-      robot.led = 0;
-    }
-    /* else if (state == 4)
-    {
-      //arm.pos_init();
-    } */
-    else if (state == 201)
-    {
-      arm.control_mode = arm_cm_voltage;
-    }
-    else if (state == 300)
-    {
-      arm.control_mode = arm_cm_pos;
-    }
-  };
-};
-
-Braço_t braço;
-
 void init_control(arm_t &arm, carrosel_t &carrosel)
 {
-  arm.pfsm = &braço;
   carrosel.pfsm = &roda;
-  braço.set_new_state(300);
-  braço.update_state();
+  arm.pfsm = &roda;
   roda.set_new_state(300);
   roda.update_state();
-  state_machines.register_state_machine(&braço);
   state_machines.register_state_machine(&roda);
 }
 
@@ -153,21 +177,5 @@ void control(arm_t &arm, carrosel_t &carrosel)
 {
   arm.control_mode = arm_cm_pos;
   carrosel.control_mode = carrosel_cm_pos;
-
   state_machines.step();
 }
-
-/*void init_control(carrosel_t &carrosel)
-{
-  carrosel.pfsm = &roda;
-  roda.set_new_state(300);
-  roda.update_state();
-  state_machines.register_state_machine(&roda);
-}
-
-void control(carrosel_t &carrosel)
-{
-  carrosel.control_mode = carrosel_cmc_pos;
-
-  state_machines.step();
-}*/
