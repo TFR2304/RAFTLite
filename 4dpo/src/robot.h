@@ -26,109 +26,119 @@
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE. */
 
-  #ifndef ROBOT_H
-  #define ROBOT_H
-  #endif
-  
-  #include <Arduino.h>
-  #include <math.h>
-  #include "PID.h"
-  #include "IRLine.h"
-  #include "state_machines.h"
-  #include "gchannels.h"
-  
-  #ifndef NUM_WHEELS
-  #define NUM_WHEELS 4
-  
-  typedef enum
-  {
-    cm_voltage,
-    cm_pid,
-    cm_kinematics,
-    cm_pos,
-    cm_IR
-  } control_mode_t;
-  
-  class robot_t
-  {
-  public:
-    int enc1, enc2, enc3, enc4;
-    int Senc1, Senc2;
-    float w1e, w2e, w3e, w4e;
-    float v1e, v2e, v3e, v4e;
-    float p1e;
-    float ve, we;
-    float ds, dtheta;
-    float rel_s, rel_theta, rel_ns;
-    float xe, ye, thetae;
-    float dns;
+#ifndef ROBOT_H
+#define ROBOT_H
+#endif
 
-    float D12, D2z;
-  
-    float dt;
-    float v, vn, w;
-    float v_req, vn_req, w_req;
-    float dv_max, dw_max;
-  
-    float wheel_radius, wheel_dist, L1_L2;
-  
-    float v1ref, v2ref, v3ref, v4ref;
-    float w1ref, w2ref, w3ref, w4ref;
-    float p1ref;
-    float u1, u2, u3, u4;
-    float u1_req, u2_req, u3_req, u4_req;
-    float i_sense, u_sense;
-    float i_lambda;
-    int PWM_1, PWM_2, PWM_3, PWM_4;
-    float vne;
-    bool stoped;
-    // int PWM_1_req, PWM_2_req;
-    float w1_req, w2_req, w3_req, w4_req;
-    float p1_req;
-    control_mode_t control_mode;
-    float follow_v, follow_k;
+#include <Arduino.h>
+#include <math.h>
+#include "PID.h"
+#include "IRLine.h"
+#include "state_machines.h"
+#include "gchannels.h"
 
-    IRLine_t IRLine_Front, IRLine_Back, last_IRLine_Front, last_IRLine_Back;
-    //IRLine_t IRLine;
-    PID_t PID[NUM_WHEELS];
-  
-    int solenoid_PWM;
-    int led;
-  
-    //IRLine_t IRLine;
-    float tof_dist, prev_tof_dist;
-  
-    int LastTouchSwitch, TouchSwitch;
-    state_machine_t *pfsm;
-    gchannels_t *pchannels;
+#ifndef NUM_WHEELS
+#define NUM_WHEELS 4
 
-      bool control_event;
-      bool new_line_read = false;
-      bool at_destin = false;
-  
-    robot_t();
-  
-    void odometry(void);
-    void setRobotVW(float Vnom, float VNnom, float Wnom);
-    bool line_marker_front(void);
-    void localization(void); 
-    
-    void accelerationLimit(void);
-    void calcMotorsVoltage(void);
-    
-    float dist(float xd,float yd);
-    void dist2Line(float xe, float ye, float xi, float yi, float xf, float yf, float& xr, float& yr);
-    void gotoXYTheta(float xf, float yf, float thf);
-    void FollowLine(float xi, float yi, float xf, float yf, float thf);
-  
-    void followLineRight(float Vnom, float K);
-    void followLineLeft(float Vnom, float K);
-  
-    void send_command(const char *command, float par);
-    void send_command(const char *command, const char *par);
-  };
-  
-  extern robot_t robot;
-  
-  #endif // ROBOT_H
-  
+typedef enum
+{
+  cm_voltage,
+  cm_pid,
+  cm_kinematics,
+  cm_pos,
+  cm_IR
+} control_mode_t;
+
+class robot_t
+{
+public:
+  int enc1, enc2, enc3, enc4;
+  int Senc1, Senc2;
+  float w1e, w2e, w3e, w4e;
+  float v1e, v2e, v3e, v4e;
+  float p1e;
+  float alfa, dist_;
+  float ve, we;
+  float ds, dtheta;
+  float rel_s, rel_theta, rel_ns;
+  float xe, ye, thetae;
+  float dns;
+
+  float D12, D2z;
+
+  float dt;
+  float v, vn, w;
+  float v_req, vn_req, w_req;
+  float dv_max, dw_max;
+
+  float wheel_radius, wheel_dist, L1_L2;
+
+  float v1ref, v2ref, v3ref, v4ref;
+  float w1ref, w2ref, w3ref, w4ref;
+  float p1ref;
+  float u1, u2, u3, u4;
+  float u1_req, u2_req, u3_req, u4_req;
+  float i_sense, u_sense;
+  float i_lambda;
+  int PWM_1, PWM_2, PWM_3, PWM_4;
+  float vne;
+  bool stoped;
+  // int PWM_1_req, PWM_2_req;
+  float w1_req, w2_req, w3_req, w4_req;
+  float p1_req;
+  control_mode_t control_mode;
+  float follow_v, follow_k;
+  float ajustar_a, ajustar_vn;
+  int Box_picked, etapa;
+  float time;
+
+  IRLine_t IRLine_Front,
+      IRLine_Back, last_IRLine_Front, last_IRLine_Back;
+  // IRLine_t IRLine;
+  PID_t PID[NUM_WHEELS];
+
+  int solenoid_PWM;
+  int led;
+
+  // IRLine_t IRLine;
+  float tof_dist, prev_tof_dist;
+
+  int LastTouchSwitch, TouchSwitch;
+  state_machine_t *pfsm;
+  gchannels_t *pchannels;
+
+  bool control_event;
+  bool new_line_read = false;
+  bool at_destin = false;
+
+  robot_t();
+
+  void odometry(void);
+  void setRobotVW(float Vnom, float VNnom, float Wnom);
+  bool line_marker_front(void);
+  void localization(void);
+
+  void accelerationLimit(void);
+  void calcMotorsVoltage(void);
+
+  float dist(float xd, float yd);
+  void dist2Line(float xe, float ye, float xi, float yi, float xf, float yf, float &xr, float &yr);
+  void gotoXYTheta(float xf, float yf, float thf);
+  void FollowLine(float xi, float yi, float xf, float yf, float thf);
+
+  void followLineRight(float Vnom, float K);
+  void followLineLeft(float Vnom, float K);
+
+  void followLineRight_ze(float Vnom, float K);
+  void followLineLeft_ze(float Vnom);
+
+  void Correct_Line(float kVN, float kA);
+  void Follow_Line_ze(float Vnom, float K);
+
+  void send_command(const char *command, float par);
+  void send_command(const char *command, const char *par);
+};
+
+extern robot_t robot;
+
+#endif // ROBOT_H

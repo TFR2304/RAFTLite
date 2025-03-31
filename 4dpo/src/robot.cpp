@@ -46,7 +46,7 @@
 #define TOL_DIST_LOC 0.05
 
 #define D12 0.16
-#define D2z -0.01
+#define D2z -0.02
 
 // State Machine states
 #define Go_Forward 1
@@ -100,13 +100,13 @@ robot_t::robot_t()
 void robot_t::odometry(void)
 {
   // Estimate wheels speed using the encoders
-  //w1e = enc1 * (TWO_PI / (5 * 64.0 * 2.0 * 1920.0));//missing gear ratio for the arm and the ferris wheel
+  // w1e = enc1 * (TWO_PI / (5 * 64.0 * 2.0 * 1920.0));//missing gear ratio for the arm and the ferris wheel
   // w2e = enc2 * (TWO_PI / (5 * 64.0 * 2.0 * 1920.0));
 
-  //p1e += w1e*dt;
+  // p1e += w1e*dt;
 
-  //v1e = w1e * wheel_radius;
-  //v2e = w2e * wheel_radius;
+  // v1e = w1e * wheel_radius;
+  // v2e = w2e * wheel_radius;
 
   // Estimate robot speed
   /*ve = (v1e + v2e) / 2.0;
@@ -144,7 +144,7 @@ void robot_t::odometry(void)
   // Estimate robot speed
   ve = (v3e + v4e + v1e + v2e) / 4.0;          //(v1e + v2e + v3e + v4e) / 4.0;
   vne = (-v3e + v4e + v1e - v2e) / 4.0;        //(-v1e + v2e + v3e - v4e) / 4.0;
-  we = (-v3e + v4e - v1e + v2e) / (4 * L1_L2); //(-v1e + v2e - v3e + v4e) / (2*L1_L2);
+  we = (-v3e + v4e - v1e + v2e) / (2 * L1_L2); //(-v1e + v2e - v3e + v4e) / (2*L1_L2);
 
   // Estimate the distance and the turn angle
   ds = ve * dt;
@@ -153,7 +153,7 @@ void robot_t::odometry(void)
 
   // Estimate pose
   xe += ds * cos(thetae + dtheta / 2);
-  ye += ds * sin(thetae + dtheta / 2);
+  ye += dns * cos(thetae + dtheta / 2);
   /* Nao mexer nesta parte
     if (fabs(dtheta) < 0.000175)
     {
@@ -176,32 +176,45 @@ void robot_t::odometry(void)
 
 void robot_t::localization(void)
 {
-  float alfa;
+
+  robot.IRLine_Front.sense_cross = robot.IRLine_Front.SenseIRLineCrosses();
+  robot.IRLine_Back.sense_cross = robot.IRLine_Back.SenseIRLineCrosses();
+  robot.IRLine_Front.IR_total = 0;
+  robot.IRLine_Back.IR_total = 0;
+  for (int i = 0; i < 5; i++)
+  {
+    robot.IRLine_Front.IR_total += robot.IRLine_Front.IR_values[i];
+  }
+  for (int i = 0; i < 5; i++)
+  {
+    robot.IRLine_Back.IR_total += robot.IRLine_Back.IR_values[i];
+  }
+
+  // calc alfa
+  // alfa = atan((robot.IRLine_Front.dist_center - robot.IRLine_Back.dist_center) / D12);
 
   // Line Crosses must be first to calculate variable "total" and "last_total"
-  if (robot.IRLine_Front.SenseIRLineCrosses() == true)
+  if (robot.IRLine_Front.sense_cross == true)
   {
-    // Serial.println("Found");
 
-    if ((abs(xe - (-0.724)) < TOL_DIST_LOC) && (abs(thetae) < TOL_TH_LOC / 3))
+    // Na linha de coordenad
+    if (((abs(ye)) < TOL_DIST_LOC) && (abs(thetae) < TOL_TH_LOC / 2))
     {
-      // CAUTION! difference between marks must be greater than TOL_DIST_LOC
-      if (abs(ye - (-0.265)) < TOL_DIST_LOC)
-        ye = -0.265;
-      if (abs(ye - (-0.237)) < TOL_DIST_LOC)
-        ye = -0.237;
-      if (abs(ye - (-0.116)) < TOL_DIST_LOC)
-        ye = -0.116;
-      if (abs(ye - (-0.083)) < TOL_DIST_LOC)
-        ye = -0.083;
-      if (abs(ye - 0.255) < TOL_DIST_LOC)
-        ye = 0.255;
-      if (abs(ye - 0.285) < TOL_DIST_LOC)
-        ye = 0.285;
+      // CAUTION! difference between marks must be greatxer than TOL_DIST_LOC
+      if (abs(xe - (0.066)) < TOL_DIST_LOC)
+      {
+        xe = 0.066;
+        ye = 0;
+      }
+      if (abs(xe - (0.214)) < TOL_DIST_LOC)
+      {
+        xe = 0.214;
+        ye = 0;
+      }
     }
   }
 
-  if (robot.IRLine_Back.SenseIRLineCrosses() == true)
+  if (robot.IRLine_Front.sense_cross == true)
   {
     if ((abs(xe - (-0.724)) < TOL_DIST_LOC) && (abs(thetae - PI / 2) < TOL_TH_LOC / 3))
     {
@@ -220,7 +233,8 @@ void robot_t::localization(void)
         ye = 0.096;
     }
   }
-
+}
+/*
   robot.IRLine_Back.dist_center = 999; // 999 - no line detection
   if (robot.IRLine_Back.total < robot.IRLine_Back.cross_total_tresh)
   { // near crosses! Invalid Edges!
@@ -267,6 +281,7 @@ void robot_t::localization(void)
     }
   }
 }
+  */
 
 void robot_t::setRobotVW(float Vnom, float VNnom, float Wnom)
 {
@@ -305,10 +320,10 @@ void robot_t::calcMotorsVoltage(void)
   }
   else if (control_mode == cm_kinematics)
   {
-    v1ref = v - vn - w * L1_L2 / 2;
-    v2ref = v + vn + w * L1_L2 / 2;
-    v3ref = v + vn - w * L1_L2 / 2;
-    v4ref = v - vn + w * L1_L2 / 2;
+    v1ref = v + vn - w * L1_L2 / 2;
+    v2ref = v - vn + w * L1_L2 / 2;
+    v3ref = v - vn - w * L1_L2 / 2;
+    v4ref = v + vn + w * L1_L2 / 2;
 
     w1ref = (v1ref / wheel_radius);
     w2ref = v2ref / wheel_radius;
@@ -405,7 +420,7 @@ void robot_t::FollowLine(float xi, float yi, float xf, float yf, float thf)
   float error_dist = dist(xf - xe, yf - ye);
   float xr, yr;
   dist2Line(xe, ye, xi, yi, xf, yf, xr, yr);
-  float alfa = atan2(yf - ye, xf - xe);
+  alfa = atan2(yf - ye, xf - xe);
 
   float error_final_rot = normalize_angle(thf - thetae);
 
@@ -505,37 +520,38 @@ void robot_t::FollowLine(float xi, float yi, float xf, float yf, float thf)
 
 void robot_t::gotoXYTheta(float xf, float yf, float thf)
 {
+
   float ang_target = atan2(yf - ye, xf - xe);
   float error_dist = sqrt(sqr(xf - xe) + sqr(yf - ye));
   float error_finalrot = normalize_angle(thf - thetae);
   if (error_dist < TOL_FINDIST)
   {
-    v_req = 0;
-    vn_req = 0;
+    v = 0;
+    vn = 0;
     // at_target_pos = true;
   }
   else if (error_dist < DIST_DA)
   {
-    v_req = (VEL_LIN_NOM / 3) * cos(ang_target - thetae);
-    vn_req = (VEL_LIN_NOM / 3) * sin(ang_target - thetae);
+    v = (VEL_LIN_NOM / 3) * cos(ang_target - thetae);
+    vn = (VEL_LIN_NOM / 3) * sin(ang_target - thetae);
   }
   else
   {
-    v_req = VEL_LIN_NOM * cos(ang_target - thetae);
-    vn_req = VEL_LIN_NOM * sin(ang_target - thetae);
+    v = VEL_LIN_NOM * cos(ang_target - thetae);
+    vn = VEL_LIN_NOM * sin(ang_target - thetae);
   }
   if (abs(error_finalrot) < TOL_FINTHETA)
   {
-    w_req = 0;
+    w = 0;
     // at_target_ang = true;
   }
   else if (abs(error_finalrot) < THETA_DA)
   {
-    w_req = signal(error_finalrot) * VEL_ANG_NOM / 3;
+    w = signal(error_finalrot) * VEL_ANG_NOM / 3;
   }
   else
   {
-    w_req = signal(error_finalrot) * VEL_ANG_NOM;
+    w = signal(error_finalrot) * VEL_ANG_NOM;
   }
   debug = error_finalrot;
 }
@@ -550,4 +566,134 @@ void robot_t::send_command(const char *command, const char *par)
 {
   if (pchannels)
     pchannels->send_command(command, par);
+}
+
+void robot_t::Correct_Line(float kvn, float kA)
+{
+
+  robot.IRLine_Back.S = robot.IRLine_Back.Dist_Sensor();
+  robot.IRLine_Front.S = robot.IRLine_Front.Dist_Sensor();
+  alfa = atan((robot.IRLine_Front.S - robot.IRLine_Back.S) / D12);
+  dist_ = (robot.IRLine_Back.S + robot.IRLine_Front.S) / 2;
+  float total1 = 0;
+  float total2 = 0;
+  float x;
+  for (int i = 0; i < 5; i++)
+  {
+    total1 += robot.IRLine_Front.IR_values[i];
+  }
+  for (int i = 0; i < 5; i++)
+  {
+    total2 += robot.IRLine_Back.IR_values[i];
+  }
+  /*
+      if (total1 < 700 || total2 < 700)
+      {
+        ajustar_a = 2;
+        ajustar_vn = 2;
+        w = 0;
+        vn = 0;
+      }
+
+      else if (abs(alfa) > 1.3)
+      {
+        ajustar_a = 1;
+
+        if (abs(alfa) < 1.4)
+        {
+          w = -5 * kA * alfa;
+        }
+
+        else if (abs(alfa) < 1.6)
+        {
+          w = -20 * kA * alfa;
+        }
+        else
+        {
+          w = -70 * kA * alfa;
+        }
+      }
+
+      else
+      {
+        ajustar_a = 0;
+        w = 0;
+      }
+      if (abs(dist_) > 1)
+      {
+        // Ajustar Dist_to_center
+        ajustar_vn = 1;
+        if (abs(dist_) < 5)
+        {
+
+          vn = -kvn * dist_;
+        }
+        else if (abs(dist_) >= 5)
+        {
+          vn = 0;
+        }
+      }
+      else
+      {
+        ajustar_vn = 0;
+        vn = 0;
+      }*/
+
+  if (total1 < 700 || total2 < 700 || total1 > 2500 || total2 > 2500)
+  {
+    ajustar_a = 2;
+    ajustar_vn = 2;
+    w = 0;
+    vn = 0;
+  }
+
+  else if (abs(dist_) > 1.3)
+  {
+    // Ajustar Dist_to_center
+    ajustar_vn = 1;
+    ajustar_a = 0;
+    w = 0;
+
+    if (abs(dist_) < 5)
+    {
+
+      vn = -kvn * dist_;
+    }
+    else if (abs(dist_) >= 5)
+    {
+      vn = 0;
+    }
+  }
+
+  else if (abs(alfa) > 1.4)
+  {
+    ajustar_a = 1;
+    ajustar_vn = 0;
+    vn = 0;
+    if (abs(alfa) < 1.4)
+    {
+      w = -5 * kA * alfa;
+    }
+
+    else if (abs(alfa) < 1.6)
+    {
+      w = -20 * kA * alfa;
+    }
+    else
+    {
+      w = -70 * kA * alfa;
+    }
+  }
+
+  else
+  {
+    ajustar_a = 0;
+    w = 0;
+    ajustar_vn = 0;
+    vn = 0;
+  }
+}
+
+void robot_t::followLineLeft_ze(float v_frente)
+{
 }
