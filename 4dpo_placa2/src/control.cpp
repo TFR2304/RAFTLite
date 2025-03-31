@@ -29,18 +29,16 @@ class Roda_t : public state_machine_t
     {
       set_new_state(4);
     }
-    else if (state == 4 && tis > 5 )
+    else if (state == 4 && tis > 5  && carrosel.counter < 3 )
     {
-      set_new_state(1);
-
-    }
-    else if (state == 5 && tis > 5 && carrosel.counter < 3)
-    {
-      //carrosel.counter = 0;
-      set_new_state(5);
       carrosel.counter++;
+      set_new_state(0);
     }
-    // pick
+    // pick from carrosel
+    else if (state == 4 && tis > 5)
+    {
+      set_new_state(5);
+    }
     else if (state == 5 && tis > 5)
     {
       set_new_state(6);
@@ -49,19 +47,14 @@ class Roda_t : public state_machine_t
     {
       set_new_state(7);
     }
-    // pre
     else if (state == 7 && tis > 5)
     {
       set_new_state(8);
     }
+    //drop
     else if (state == 8 && tis > 5)
     {
       set_new_state(9);
-    }
-    else if (state == 9 && tis > 5)
-    {
-      set_new_state(5);
-
     }
     else if (state == 9 && tis > 5)
     {
@@ -71,20 +64,21 @@ class Roda_t : public state_machine_t
     {
       set_new_state(11);
     }
-    else if (state == 11 && tis > 5  && carrosel.counter < 3)
+    else if (state == 11 && tis > 5 && carrosel.counter  > 0)
     {
-      set_new_state(6);
       carrosel.counter--;
+      set_new_state(5);
     }
-    else if (state == 11 && tis > 10)
+    else if (state == 11 && tis > 5)
     {
       set_new_state(12);
+    }
+    else if (state == 12 && tis > 5 )
+    {
+      set_new_state(12);
+      carrosel.counter = 0;
     }
     //end
-    else if (state == 12)
-    {
-      set_new_state(12);
-    }
   };
 
   virtual void state_actions_rules(void)
@@ -93,13 +87,12 @@ class Roda_t : public state_machine_t
     if (state == 0)
     { 
       arm.set_pos(-45);
-      carrosel.set_pos(-10);
-      carrosel.counter = 0;
+      carrosel.set_pos(carrosel.idle_pos[carrosel.counter]);
     }
     else if (state == 1)
     { 
       arm.set_pos(-2);
-      carrosel.set_pos(carrosel.idle_pos[carrosel.counter] ) ;
+      carrosel.set_pos(carrosel.pick1_pos[carrosel.counter] ) ;
     }
     else if (state == 2)
     { 
@@ -108,25 +101,23 @@ class Roda_t : public state_machine_t
     else if (state == 3)
     { 
       arm.set_pos(-67);
-      carrosel.set_pos(carrosel.pick1_pos[carrosel.counter]);
+      carrosel.set_pos(carrosel.store_pos[carrosel.counter]);
       carrosel.solenoid_PWM = 1000;
     }
     else if (state == 4)
     { 
-      arm.set_pos(-67);
-      carrosel.set_pos(carrosel.store_pos[carrosel.counter]);
-      carrosel.solenoid_PWM = 1000;
+      carrosel.solenoid_PWM = 0;
     }
     else if (state == 5)
     { 
-      carrosel.solenoid_PWM = 0;
+      carrosel.set_pos(carrosel.pick2_pos[carrosel.counter]+ 40);
     }
     else if (state == 6)
     { 
       arm.set_pos(-80);
     }
     else if (state == 7)
-    {
+    { 
       carrosel.set_pos(carrosel.pick2_pos[carrosel.counter]);
     }
     else if (state == 8)
@@ -142,13 +133,12 @@ class Roda_t : public state_machine_t
     else if (state == 10)
     {
       arm.set_pos(-5);
-      carrosel.set_pos(carrosel.drop_pos[carrosel.counter] + 34);
+      carrosel.set_pos(carrosel.drop_pos[carrosel.counter]);
       carrosel.solenoid_PWM = 1000;
     }
     else if (state == 11)
     {
       carrosel.solenoid_PWM = 0;
-
     }
     else if (state == 12)
     {
