@@ -36,15 +36,15 @@ int UdpBufferSize = UDP_MAX_SIZE;
 #define ENC2_PIN_A 4
 #define ENC2_PIN_B 5
 
-#define ENC3_PIN_A 6
-#define ENC3_PIN_B 7
+//#define ENC3_PIN_A 6
+//#define ENC3_PIN_B 7
 
 #define ENC4_PIN_A 8
 #define ENC4_PIN_B 10
 
 #define NUM_ENCODERS 4
 PicoEncoder encoders[NUM_ENCODERS];
-pin_size_t encoder_pins[NUM_ENCODERS] = {ENC1_PIN_A, ENC2_PIN_A, ENC3_PIN_A, ENC4_PIN_A};
+pin_size_t encoder_pins[NUM_ENCODERS] = {ENC1_PIN_A, ENC2_PIN_A};
 
 bool calibration_requested;
 
@@ -62,6 +62,8 @@ bool calibration_requested;
 
 #define MOTOR4A_PIN 17
 #define MOTOR4B_PIN 16
+
+
 
 int debug;
 
@@ -103,6 +105,7 @@ uint32_t interval, last_cycle;
 uint32_t loop_micros;
 
 // Read Sensors :
+
 
 void readIRSensors(IRLine_t &IRLine)
 {
@@ -360,8 +363,8 @@ void setup()
   pinMode(ENC1_PIN_B, INPUT_PULLUP);
   pinMode(ENC2_PIN_A, INPUT_PULLUP);
   pinMode(ENC2_PIN_B, INPUT_PULLUP);
-  pinMode(ENC3_PIN_A, INPUT_PULLUP);
-  pinMode(ENC3_PIN_B, INPUT_PULLUP);
+  //pinMode(ENC3_PIN_A, INPUT_PULLUP);
+  //pinMode(ENC3_PIN_B, INPUT_PULLUP);
   pinMode(ENC4_PIN_A, INPUT_PULLUP);
   pinMode(ENC4_PIN_B, INPUT_PULLUP);
 
@@ -378,11 +381,15 @@ void setup()
   pinMode(SOLENOID_PIN_A, OUTPUT);
   pinMode(SOLENOID_PIN_B, OUTPUT);
 
+//  Serial2.setRX(IR_RXPin);
+//  Serial2.setTX(IR_TXPin);
+  
+
   // Encoders Setup
   encoders[0].begin(encoder_pins[0]);
   encoders[1].begin(encoder_pins[1]);
-  encoders[2].begin(encoder_pins[2]);
-  encoders[3].begin(encoder_pins[3]);
+  //encoders[2].begin(encoder_pins[2]);
+  //encoders[3].begin(encoder_pins[3]);
 
   pico4drive.init();
   
@@ -434,6 +441,7 @@ void setup()
   // Start the serial port with 115200 baudrate
   Serial.begin(115200);
   Serial1.begin(115200);
+  Serial2.begin(2400, SERIAL_8N1);
 
 
   float control_interval = 0.04; // In seconds
@@ -522,9 +530,9 @@ void setup()
   init_control(arm, carrosel);
 
 
-  arm.pos_init();
-  carrosel.carrosel_pos_init();
-  
+  //arm.pos_init();
+  //carrosel.carrosel_pos_init();
+
   //init_control(carrosel);
 }
 /*
@@ -532,14 +540,41 @@ void setup()
 
 
 ------------------LOOP CODE-----------------------
-
-
-
 */
-bool csel_init = false;
-
+char irrecvdata;
+int irrecvbuffer_index = -1;
+char irrecvbuffer[5];
+bool ReceivedInstruction = false;
 void loop()
 {
+  if (Serial2.available() ) {
+    irrecvdata = Serial2.read();
+    //Serial.write(irrecvdata); 
+    if(irrecvdata == 'U') {
+      Serial.print("!");
+    } else if(irrecvdata == 'W') {
+      irrecvbuffer_index = 0;
+    } else if(irrecvbuffer_index >= 0) {
+      irrecvbuffer[irrecvbuffer_index] = irrecvdata;
+      if(irrecvbuffer[irrecvbuffer_index] == 'w' || irrecvbuffer[irrecvbuffer_index] == 'o' || irrecvbuffer[irrecvbuffer_index] == 'u'){
+        irrecvbuffer_index++;
+        if(irrecvbuffer_index >= 4) {
+          irrecvbuffer[irrecvbuffer_index] = '\0';
+          irrecvbuffer_index = -1;
+          Serial.println("Received Instruction!");
+          Serial.println(irrecvbuffer);
+          //serial_commands.send_command("Box", irrecvbuffer);
+          ReceivedInstruction = true;
+          //control(arm, carrosel);
+          //robot.state = SETUP;
+          
+        }
+      } else {
+        Serial.write(irrecvdata);
+        Serial.println();
+      }
+    }
+  }
   if (WiFi.connected() && !ip_on)
   {
     // Connection established
@@ -636,13 +671,14 @@ void loop()
   //----------- Código Para Roda e Braço -------------------------------------------------------
   // Read and process sensors
 
+
     read_PIO_encoders();
 
    
     arm.odometry();
     carrosel.odometry();
 
-    control(arm, carrosel);
+    //control(arm, carrosel);
 
     // Calc outputs
     // arm.accelerationLimit();
@@ -664,12 +700,14 @@ void loop()
     //control(arm, carrosel);
     
     
-    
+  
   
   //----------- Fim Do Código da Roda e do Braço------------------------------------------------
      
 
       // Debug information
+      serial_commands.send_command("Box0", irrecvbuffer);
+      
       serial_commands.send_command("swPin", digitalRead(switchPIN));
       serial_commands.send_command("dte", delta);
 
@@ -768,4 +806,5 @@ void loop()
 
       serial1_commands.flush();
   }
+
 }

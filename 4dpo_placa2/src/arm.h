@@ -8,14 +8,6 @@
 #define switchPIN 22
 
 
-
-
-
-
-
-
-
-
 typedef enum
 {
     arm_cm_pos,

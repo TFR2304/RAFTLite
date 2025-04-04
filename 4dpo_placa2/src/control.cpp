@@ -4,6 +4,9 @@
 #include "state_machines.h"
 #include "motor_bench.h"
 
+
+
+
 motor_bench_t motor_bench;
 
 class Roda_t : public state_machine_t
@@ -97,12 +100,12 @@ class Roda_t : public state_machine_t
     if (state == 0)
     { 
       arm.set_pos(-45);
-      carrosel.set_pos(carrosel.idle_pos[carrosel.counter] );
+      carrosel.set_pos(carrosel.idle_pos[carrosel.counter] +10);
     }
     else if (state == 1)
     { 
       arm.set_pos(-2);
-      carrosel.set_pos(carrosel.pick1_pos[carrosel.counter] -10) ;
+      carrosel.set_pos(carrosel.pick1_pos[carrosel.counter]) ;
     }
     else if (state == 2)
     { 
@@ -181,5 +184,7 @@ void control(arm_t &arm, carrosel_t &carrosel)
 {
   arm.control_mode = arm_cm_pos;
   carrosel.control_mode = carrosel_cm_pos;
+  //roda.set_new_state(1);
+  //roda.update_state();
   state_machines.step();
 }
