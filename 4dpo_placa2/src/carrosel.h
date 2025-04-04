@@ -37,7 +37,7 @@ public:
 
  float solenoid_PWM;
  bool stoped;
- bool pick_ok, pick_done, drop_ok, drop_done;
+ float pick_ok, pick_done, drop_ok, drop_done;
  state_machine_t *pfsm;
  control_mode_carrosel control_mode;
  IRLine_t IR;
