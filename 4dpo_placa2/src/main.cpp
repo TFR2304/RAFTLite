@@ -678,7 +678,7 @@ void loop()
     arm.odometry();
     carrosel.odometry();
 
-    //control(arm, carrosel);
+    control(arm, carrosel);
 
     // Calc outputs
     // arm.accelerationLimit();

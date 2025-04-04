@@ -4,9 +4,6 @@
 #include "state_machines.h"
 #include "motor_bench.h"
 
-
-
-
 motor_bench_t motor_bench;
 
 class Roda_t : public state_machine_t
@@ -14,11 +11,11 @@ class Roda_t : public state_machine_t
   virtual void next_state_rules(void)
   {
     // idle
-    if (state == 0 && tis > 4 && carrosel.pick_ok == 1)
+    if (state == 0 && tis > 5 && carrosel.pick_ok == 1.0)
     {
       set_new_state(1);
-      carrosel.pick_done = 0;
-      carrosel.pick_ok = 0;
+      carrosel.pick_done = 0.0;
+      carrosel.pick_ok = 0.0;
     }
     // pick
     else if (state == 1 && tis > 3.5)
@@ -189,7 +186,7 @@ void control(arm_t &arm, carrosel_t &carrosel)
   arm.control_mode = arm_cm_pos;
   carrosel.control_mode = carrosel_cm_pos;
   //roda.set_new_state(1);
-  //roda.update_state();
+  roda.update_state();
   
   state_machines.step();
 }

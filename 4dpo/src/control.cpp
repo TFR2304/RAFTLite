@@ -63,13 +63,13 @@ class main_fsm_t : public state_machine_t
     }
     else if (state == 20 && robot.xe > 0.765)
     {
-      robot.pick_ok = 1;
+      robot.pick_ok = 1.0;
       set_new_state(21);
     }
-    else if (state == 21 && tis > 3 && robot.pick_done == 1)
+    else if (state == 21 && tis > 3 && robot.pick_done == 1.0)
     {
-      robot.pick_ok = 0;
-      robot.pick_done = 0;
+      robot.pick_ok = 0.0;
+      robot.pick_done = 0.0;
       set_new_state(33);
     }
     else if (state == 29 && tis > 3 && robot.IRLine_Front.IR_values[3] > 600)
