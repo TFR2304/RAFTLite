@@ -217,7 +217,7 @@ void process_command(command_frame_t frame)
   else if (frame.command_is("Box0"))
   { // The 'u2' command sets the voltage for motor 1
     strncpy(boxes, frame.text, order_len - 1);
-    if(!strcmp(boxes, "oooo") && robot.pfsm->state == 0)
+    if(!strcmp(boxes, "oooo") && robot.pfsm->state == 200)
     {
       robot.pfsm->set_new_state(10);
       robot.pfsm->update_state();

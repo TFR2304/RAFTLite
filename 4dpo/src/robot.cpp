@@ -82,10 +82,10 @@ robot_t::robot_t()
   dw_max = 10;
   dt = 0.04;
 
-  pick_ok = false;
-  pick_done = false;
-  drop_done = false;
-  drop_ok = false;
+  pick_ok = 0;
+  pick_done = 0;
+  drop_done = 0;
+  drop_ok = 0;
 
   p1e = 0;
 
