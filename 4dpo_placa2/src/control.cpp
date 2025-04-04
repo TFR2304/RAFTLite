@@ -14,11 +14,11 @@ class Roda_t : public state_machine_t
   virtual void next_state_rules(void)
   {
     // idle
-    if (state == 0 && tis > 4 && carrosel.pick_ok == true)
+    if (state == 0 && tis > 4 && carrosel.pick_ok == 1)
     {
       set_new_state(1);
-      carrosel.pick_done = false;
-      carrosel.pick_ok = false;
+      carrosel.pick_done = 0;
+      carrosel.pick_ok = 0;
     }
     // pick
     else if (state == 1 && tis > 3.5)
@@ -41,7 +41,7 @@ class Roda_t : public state_machine_t
     else if (state == 5 && tis > 1  && carrosel.counter < 3 )
     {
       carrosel.counter++;
-      carrosel.pick_done = true;
+      carrosel.pick_done = 1;
       set_new_state(0);
     }
     // pick from carrosel
@@ -49,11 +49,11 @@ class Roda_t : public state_machine_t
     {
       set_new_state(6);
     }
-    else if (state == 6 && tis > 1 && carrosel.drop_ok == true)
+    else if (state == 6 && tis > 1 && carrosel.drop_ok == 1)
     {
       set_new_state(7);
-      carrosel.drop_ok = false;
-      carrosel.drop_done = false;
+      carrosel.drop_ok = 0;
+      carrosel.drop_done = 0;
     }
     else if (state == 7 && tis > 5)
     {

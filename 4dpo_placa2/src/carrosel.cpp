@@ -64,10 +64,10 @@ carrosel_t::carrosel_t(void)
  ve = 0;
  we = 0;
 
- pick_ok = false;
- pick_done = false;
- drop_ok = false;
- drop_done = false;
+ pick_ok = 0;
+ pick_done = 0;
+ drop_ok = 0;
+ drop_done = 0;
 }
 
 void carrosel_t::odometry(void)

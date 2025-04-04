@@ -232,15 +232,15 @@ void process_command(command_frame_t frame)
   }
   else if (frame.command_is("PICK_OK"))
   {
-    carrosel.pick_ok = true;
+    carrosel.pick_ok = frame.value;
   }
   else if (frame.command_is("DROP_OK"))
   {
-    carrosel.drop_ok = true;
+    carrosel.drop_ok = frame.value;
   }
   else if (frame.command_is("stC"))
   {
-    carrosel.drop_ok = true;
+    carrosel.drop_ok = 0;
   }
   else if (frame.command_is("ps"))
   {
