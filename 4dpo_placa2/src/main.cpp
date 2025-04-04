@@ -42,8 +42,6 @@ int UdpBufferSize = UDP_MAX_SIZE;
 #define ENC4_PIN_A 8
 #define ENC4_PIN_B 10
 
-#define SWITCH_PIN 9
-
 #define NUM_ENCODERS 4
 PicoEncoder encoders[NUM_ENCODERS];
 pin_size_t encoder_pins[NUM_ENCODERS] = {ENC1_PIN_A, ENC2_PIN_A, ENC3_PIN_A, ENC4_PIN_A};
@@ -119,7 +117,7 @@ uint32_t encodeIRSensors(void)
 {
   byte c;                                           // Encode five IR sensors with 6 bits for each sensor
   uint32_t result = carrosel.IR.IR_values[0] >> 4; // From 10 bits to 6 bits
-  for (c = 1; c < 5; c++)
+  for (c = 1; c < IRSENSORS_COUNT; c++)
   {
     result = (result << 6) | (carrosel.IR.IR_values[c] >> 4);
   }
@@ -228,6 +226,18 @@ void process_command(command_frame_t frame)
   {
     // load_commands(pars_fname, serial_commands);
     load_pars_requested = true;
+  }
+  else if (frame.command_is("PICK_OK"))
+  {
+    carrosel.pick_ok = true;
+  }
+  else if (frame.command_is("DROP_OK"))
+  {
+    carrosel.drop_ok = true;
+  }
+  else if (frame.command_is("stC"))
+  {
+    carrosel.drop_ok = true;
   }
   else if (frame.command_is("ps"))
   {
@@ -355,7 +365,7 @@ void setup()
   pinMode(ENC4_PIN_A, INPUT_PULLUP);
   pinMode(ENC4_PIN_B, INPUT_PULLUP);
 
-  pinMode(SWITCH_PIN, INPUT_PULLUP);
+  pinMode(switchPIN, INPUT_PULLUP);
 
   pinMode(TEST_PIN, OUTPUT);
 
@@ -419,7 +429,8 @@ void setup()
 
   arm.pchannels = &serial_commands;
   //robot.pchannels = &serial_commands;
-  //carrosel.pchannels = &serial_commands;
+  carrosel.pchannels = &serial1_commands;
+
   // Start the serial port with 115200 baudrate
   Serial.begin(115200);
   Serial1.begin(115200);
@@ -509,8 +520,11 @@ void setup()
   
   set_interval(control_interval); // In seconds
   init_control(arm, carrosel);
-  carrosel.carrosel_pos_init();
+
+
   arm.pos_init();
+  carrosel.carrosel_pos_init();
+  
   //init_control(carrosel);
 }
 /*
@@ -572,12 +586,13 @@ void loop()
     serial_commands.process_char(b);
     // Serial.write(b);
   }
+  uint8_t x;
 
   if (Serial1.available())
   { // Only do this if there is serial data to be read
 
-    b = Serial1.read();
-    serial1_commands.process_char(b);
+    x = Serial1.read();
+    serial1_commands.process_char(x);
     // Serial.write(b);
   }
 
@@ -655,7 +670,7 @@ void loop()
      
 
       // Debug information
-      serial_commands.send_command("swPin", digitalRead(SWITCH_PIN));
+      serial_commands.send_command("swPin", digitalRead(switchPIN));
       serial_commands.send_command("dte", delta);
 
       serial_commands.send_command("u1A", arm.u);
@@ -739,12 +754,17 @@ void loop()
       serial_commands.flush();
       Serial.println();
 
-      serial1_commands.send_command("IRB0", carrosel.IR.IR_values[0]);
-      serial1_commands.send_command("IRB1", carrosel.IR.IR_values[1]);
-      serial1_commands.send_command("IRB2", carrosel.IR.IR_values[2]);
-      serial1_commands.send_command("IRB3", carrosel.IR.IR_values[3]);
-      serial1_commands.send_command("IRB4", carrosel.IR.IR_values[4]);
-      serial1_commands.send_command("IRB5", carrosel.IR.IR_values[5]);
+      serial1_commands.send_command("IRB10", carrosel.IR.IR_values[0]);
+      serial1_commands.send_command("IRB11", carrosel.IR.IR_values[1]);
+      serial1_commands.send_command("IRB12", carrosel.IR.IR_values[2]);
+      serial1_commands.send_command("IRB13", carrosel.IR.IR_values[3]);
+      serial1_commands.send_command("IRB14", carrosel.IR.IR_values[4]);
+      serial1_commands.send_command("IRB15", carrosel.IR.IR_values[5]);
+      serial1_commands.send_command("a", 1);
+
+
+      serial1_commands.send_command("PICK_DONE", carrosel.pick_done);
+      serial1_commands.send_command("DROP_DONE", carrosel.drop_done);
 
       serial1_commands.flush();
   }

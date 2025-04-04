@@ -56,7 +56,6 @@ void arm_t::pos_init(void)
   PWM = pico4drive.voltage_to_PWM(u);
   pico4drive.set_driver_PWM(PWM, MOTOR2A_PIN, MOTOR2B_PIN);
   control_mode = arm_cm_pos;
-  
 }
 
 void arm_t::set_pos(float pos)

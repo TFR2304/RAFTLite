@@ -5,7 +5,16 @@
 #include "gchannels.h"
 #include <math.h>
 
-#define switchPIN 9
+#define switchPIN 22
+
+
+
+
+
+
+
+
+
 
 typedef enum
 {

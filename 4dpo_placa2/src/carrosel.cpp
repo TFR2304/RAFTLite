@@ -63,6 +63,11 @@ carrosel_t::carrosel_t(void)
  p_e = 0;
  ve = 0;
  we = 0;
+
+ pick_ok = false;
+ pick_done = false;
+ drop_ok = false;
+ drop_done = false;
 }
 
 void carrosel_t::odometry(void)
@@ -84,7 +89,7 @@ void carrosel_t::set_pos(float pos)
 void carrosel_t::carrosel_pos_init(void)
 {
   cpy_readIRSensors(IR);
-  while (IR.IR_values[2] > 60)
+  while (IR.IR_values[0] > 60)
  {
   // Roda devagar se estiver perto da risca
   cpy_readIRSensors(IR);
