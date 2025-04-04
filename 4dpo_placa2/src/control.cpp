@@ -80,7 +80,7 @@ class Roda_t : public state_machine_t
     else if (state == 12 && tis > 1 && carrosel.counter  > 0)
     {
       carrosel.counter--;
-      carrosel.drop_done = true;
+      carrosel.drop_done = 1;
       set_new_state(6);
     }
     else if (state == 12 && tis > 1)
@@ -101,7 +101,7 @@ class Roda_t : public state_machine_t
     if (state == 0)
     { 
       arm.set_pos(-45);
-      carrosel.set_pos(carrosel.idle_pos[carrosel.counter] +10);
+      carrosel.set_pos(carrosel.idle_pos[carrosel.counter] + 10);
     }
     else if (state == 1)
     { 
