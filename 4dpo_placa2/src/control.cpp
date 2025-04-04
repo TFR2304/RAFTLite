@@ -14,7 +14,7 @@ class Roda_t : public state_machine_t
   virtual void next_state_rules(void)
   {
     // idle
-    if (state == 0 && tis > 4 /*&& carrosel.pick_ok == true*/)
+    if (state == 0 && tis > 4 && carrosel.pick_ok == true)
     {
       set_new_state(1);
       carrosel.pick_ok = false;
@@ -47,7 +47,7 @@ class Roda_t : public state_machine_t
     {
       set_new_state(6);
     }
-    else if (state == 6 && tis > 1 /*&& carrosel.drop_ok == true*/)
+    else if (state == 6 && tis > 1 && carrosel.drop_ok == true)
     {
       set_new_state(7);
       carrosel.drop_ok = false;
@@ -175,7 +175,7 @@ void init_control(arm_t &arm, carrosel_t &carrosel)
 {
   carrosel.pfsm = &roda;
   arm.pfsm = &roda;
-  roda.set_new_state(300);
+  roda.set_new_state(0);
   roda.update_state();
   state_machines.register_state_machine(&roda);
 }
