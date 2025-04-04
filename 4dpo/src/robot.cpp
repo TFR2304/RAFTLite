@@ -77,10 +77,15 @@ robot_t::robot_t()
   stoped = false;
   wheel_dist = 0.1925;
   wheel_radius = 0.065 / 2;
-  L1_L2 = 0.54;
+  L1_L2 = 0.56;
   dv_max = 5;
   dw_max = 10;
   dt = 0.04;
+
+  pick_ok = false;
+  pick_done = false;
+  drop_done = false;
+  drop_ok = false;
 
   p1e = 0;
 
@@ -136,15 +141,15 @@ void robot_t::odometry(void)
   w4e = robot.enc4;
   */
 
-  v1e = w1e * wheel_radius;
-  v2e = w2e * wheel_radius;
-  v3e = w3e * wheel_radius;
-  v4e = w4e * wheel_radius;
+  v1e = -w1e * wheel_radius;
+  v2e = -w2e * wheel_radius;
+  v3e = -w3e * wheel_radius;
+  v4e = -w4e * wheel_radius;
 
   // Estimate robot speed
-  ve = (v3e + v4e + v1e + v2e) / 4.0;          //(v1e + v2e + v3e + v4e) / 4.0;
-  vne = (-v3e + v4e + v1e - v2e) / 4.0;        //(-v1e + v2e + v3e - v4e) / 4.0;
-  we = (-v3e + v4e - v1e + v2e) / (2 * L1_L2); //(-v1e + v2e - v3e + v4e) / (2*L1_L2);
+  ve = (v3e - v4e + v1e - v2e) / 4.0;          //(v1e + v2e + v3e + v4e) / 4.0;
+  vne = -(v3e + v4e - v1e - v2e) / 4.0;        //(-v1e + v2e + v3e - v4e) / 4.0;
+  we = (-v3e - v4e - v1e - v2e) / (2 * L1_L2); //(-v1e + v2e - v3e + v4e) / (2*L1_L2);
 
   // Estimate the distance and the turn angle
   ds = ve * dt;
@@ -152,8 +157,8 @@ void robot_t::odometry(void)
   dtheta = we * dt;
 
   // Estimate pose
-  xe += ds * cos(thetae + dtheta / 2);
-  ye += dns * cos(thetae + dtheta / 2);
+  xe += ds * cos(thetae + dtheta / 2) - dns * sin(thetae + dtheta / 2);
+  ye += ds * sin(thetae + dtheta / 2) + dns * cos(thetae + dtheta / 2);
   /* Nao mexer nesta parte
     if (fabs(dtheta) < 0.000175)
     {
@@ -196,92 +201,130 @@ void robot_t::localization(void)
   // Line Crosses must be first to calculate variable "total" and "last_total"
   if (robot.IRLine_Front.sense_cross == true)
   {
-
     // Na linha de coordenad
-    if (((abs(ye)) < TOL_DIST_LOC) && (abs(thetae) < TOL_TH_LOC / 2))
+    if (((abs(ye)) < TOL_DIST_LOC))
     {
       // CAUTION! difference between marks must be greatxer than TOL_DIST_LOC
-      if (abs(xe - (0.066)) < TOL_DIST_LOC)
+      if (abs(xe - (0.225)) < TOL_DIST_LOC)
       {
-        xe = 0.066;
+        xe = 0.225;
         ye = 0;
       }
-      if (abs(xe - (0.214)) < TOL_DIST_LOC)
+      if (abs(xe - (0.375)) < TOL_DIST_LOC)
       {
-        xe = 0.214;
+        xe = 0.375;
+        ye = 0;
+      }
+      if (abs(xe - (0.735)) < TOL_DIST_LOC)
+      {
+        xe = 0.735;
+        ye = 0;
+      }
+      if (abs(xe) < TOL_DIST_LOC)
+      {
+        xe = 0;
         ye = 0;
       }
     }
-  }
 
-  if (robot.IRLine_Front.sense_cross == true)
-  {
-    if ((abs(xe - (-0.724)) < TOL_DIST_LOC) && (abs(thetae - PI / 2) < TOL_TH_LOC / 3))
+    if (((abs(xe)) < TOL_DIST_LOC))
     {
-      // CAUTION! difference between marks must be greater than TOL_DIST_LOC
-      if (abs(ye - (-0.308)) < TOL_DIST_LOC)
-        ye = -0.308;
-      if (abs(ye - (-0.279)) < TOL_DIST_LOC)
-        ye = -0.279;
-      if (abs(ye - (-0.083)) < TOL_DIST_LOC)
-        ye = -0.083;
-      if (abs(ye - (-0.057)) < TOL_DIST_LOC)
-        ye = -0.057;
-      if (abs(ye - 0.063) < TOL_DIST_LOC)
-        ye = 0.063;
-      if (abs(ye - 0.096) < TOL_DIST_LOC)
-        ye = 0.096;
-    }
-  }
-}
-/*
-  robot.IRLine_Back.dist_center = 999; // 999 - no line detection
-  if (robot.IRLine_Back.total < robot.IRLine_Back.cross_total_tresh)
-  { // near crosses! Invalid Edges!
-    if (robot.IRLine_Back.calcIRLineEdgeLeft() == true)
-    {
-      robot.IRLine_Back.dist_center = robot.IRLine_Back.pos_left;
-      if (robot.IRLine_Back.calcIRLineEdgeRight() == true)
-        robot.IRLine_Back.dist_center = (robot.IRLine_Back.pos_left + robot.IRLine_Back.pos_right) / 2;
-    }
-    else
-    {
-      if (robot.IRLine_Back.calcIRLineEdgeRight() == true)
-        robot.IRLine_Back.dist_center = robot.IRLine_Back.pos_right;
-    }
-  }
-
-  robot.IRLine_Front.dist_center = 999; // 999 - no line detection
-  if (robot.IRLine_Front.total < robot.IRLine_Front.cross_total_tresh)
-  { // near crosses! Invalid Edges!
-    if (robot.IRLine_Front.calcIRLineEdgeLeft() == true)
-    {
-      robot.IRLine_Front.dist_center = robot.IRLine_Front.pos_left;
-      if (robot.IRLine_Front.calcIRLineEdgeRight() == true)
-        robot.IRLine_Front.dist_center = (robot.IRLine_Front.pos_left + robot.IRLine_Front.pos_right) / 2;
-    }
-    else
-    {
-      if (robot.IRLine_Front.calcIRLineEdgeRight() == true)
-        robot.IRLine_Front.dist_center = robot.IRLine_Front.pos_right;
-    }
-  }
-
-  if ((robot.IRLine_Front.dist_center != 999) && (robot.IRLine_Back.dist_center != 999))
-  { // detection in both sensors
-    alfa = atan((robot.IRLine_Front.dist_center - robot.IRLine_Back.dist_center) / D12);
-
-    if (abs(thetae - PI / 2) < TOL_TH_LOC)
-    {
-      if (abs(xe - (-0.724)) < TOL_DIST_LOC)
+      // CAUTION! difference between marks must be greatxer than TOL_DIST_LOC
+      if (abs(ye + (0.735)) < TOL_DIST_LOC)
       {
-        xe = -0.724 + (robot.IRLine_Front.dist_center + tan(alfa) * (-(D12 + D2z))) * cos(alfa);
-        thetae = PI / 2 - alfa;
+        xe = 0;
+        ye = -0.735;
+      }
+      if (abs(ye + (1.030)) < TOL_DIST_LOC)
+      {
+        xe = 0;
+        ye = -1.030;
+      }
+      if (abs(ye + (1.118)) < TOL_DIST_LOC)
+      {
+        xe = 0;
+        ye = -1.118;
+      }
+      if (abs(ye + (1.330)) < TOL_DIST_LOC)
+      {
+        xe = 0;
+        ye = -1.330;
+      }
+      if (abs(ye + (1.480)) < TOL_DIST_LOC)
+      {
+        xe = 0;
+        ye = -1.480;
+      }
+    }
+
+    if (((abs(xe - 0.735)) < TOL_DIST_LOC))
+    {
+      // CAUTION! difference between marks must be greatxer than TOL_DIST_LOC
+      if (abs(ye + (0.155)) < TOL_DIST_LOC)
+      {
+        xe = 0.735;
+        ye = -0.155;
+      }
+      if (abs(ye + (0.310)) < TOL_DIST_LOC)
+      {
+        xe = 0.735;
+        ye = -0.310;
+      }
+      if (abs(ye + (0.465)) < TOL_DIST_LOC)
+      {
+        xe = 0.735;
+        ye = -0.465;
+      }
+      if (abs(ye + (0.735)) < TOL_DIST_LOC)
+      {
+        xe = 0.735;
+        ye = -0.735;
+      }
+      if (abs(ye + (1.480)) < TOL_DIST_LOC)
+      {
+        xe = 0.735;
+        ye = -1.480;
+      }
+    }
+
+    if (((abs(ye + 0.735)) < TOL_DIST_LOC))
+    {
+      // CAUTION! difference between marks must be greatxer than TOL_DIST_LOC
+      if (abs(xe - (0.22)) < TOL_DIST_LOC)
+      {
+        xe = 0.22;
+        ye = -0.735;
+      }
+      if (abs(xe - (0.375)) < TOL_DIST_LOC)
+      {
+        xe = 0.375;
+        ye = -0.735;
+      }
+      if (abs(xe - (0.525)) < TOL_DIST_LOC)
+      {
+        xe = 0.525;
+        ye = -0.735;
+      }
+    }
+
+    if (((abs(ye + 1.480)) < TOL_DIST_LOC))
+    {
+      // CAUTION! difference between marks must be greatxer than TOL_DIST_LOC
+      if (abs(xe - (0.525)) < TOL_DIST_LOC)
+      {
+        xe = 0.525;
+        ye = -1.480;
+      }
+      if (abs(xe - (0.375)) < TOL_DIST_LOC)
+      {
+        xe = 0.375;
+        ye = -1.480;
       }
     }
   }
+
+
 }
-  */
 
 void robot_t::setRobotVW(float Vnom, float VNnom, float Wnom)
 {
@@ -320,10 +363,10 @@ void robot_t::calcMotorsVoltage(void)
   }
   else if (control_mode == cm_kinematics)
   {
-    v1ref = v + vn - w * L1_L2 / 2;
-    v2ref = v - vn + w * L1_L2 / 2;
-    v3ref = v - vn - w * L1_L2 / 2;
-    v4ref = v + vn + w * L1_L2 / 2;
+    v1ref = -(v + vn - w * L1_L2 / 2);
+    v2ref = -(-v + vn - w * L1_L2 / 2);
+    v3ref = -(v - vn - w * L1_L2 / 2);
+    v4ref = -(-v - vn - w * L1_L2 / 2);
 
     w1ref = (v1ref / wheel_radius);
     w2ref = v2ref / wheel_radius;
@@ -647,7 +690,7 @@ void robot_t::Correct_Line(float kvn, float kA)
     vn = 0;
   }
 
-  else if (abs(dist_) > 1.3)
+  else if (abs(dist_) > 0.8)
   {
     // Ajustar Dist_to_center
     ajustar_vn = 1;
@@ -665,7 +708,7 @@ void robot_t::Correct_Line(float kvn, float kA)
     }
   }
 
-  else if (abs(alfa) > 1.4)
+  else if (abs(alfa) > 1.3)
   {
     ajustar_a = 1;
     ajustar_vn = 0;

@@ -17,6 +17,7 @@ class Roda_t : public state_machine_t
     if (state == 0 && tis > 4 && carrosel.pick_ok == true)
     {
       set_new_state(1);
+      carrosel.pick_done = false;
       carrosel.pick_ok = false;
     }
     // pick
@@ -40,6 +41,7 @@ class Roda_t : public state_machine_t
     else if (state == 5 && tis > 1  && carrosel.counter < 3 )
     {
       carrosel.counter++;
+      carrosel.pick_done = true;
       set_new_state(0);
     }
     // pick from carrosel
@@ -51,6 +53,7 @@ class Roda_t : public state_machine_t
     {
       set_new_state(7);
       carrosel.drop_ok = false;
+      carrosel.drop_done = false;
     }
     else if (state == 7 && tis > 5)
     {
@@ -80,6 +83,7 @@ class Roda_t : public state_machine_t
     else if (state == 12 && tis > 1 && carrosel.counter  > 0)
     {
       carrosel.counter--;
+      carrosel.drop_done = true;
       set_new_state(6);
     }
     else if (state == 12 && tis > 1)
@@ -186,5 +190,6 @@ void control(arm_t &arm, carrosel_t &carrosel)
   carrosel.control_mode = carrosel_cm_pos;
   //roda.set_new_state(1);
   //roda.update_state();
+  
   state_machines.step();
 }

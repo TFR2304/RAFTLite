@@ -90,6 +90,7 @@ public:
   float follow_v, follow_k;
   float ajustar_a, ajustar_vn;
   int Box_picked, etapa;
+  bool pick_ok, pick_done, drop_ok, drop_done;
   float time;
 
   IRLine_t IRLine_Front,

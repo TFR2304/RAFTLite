@@ -14,7 +14,6 @@ class main_fsm_t : public state_machine_t
     if (state == 0 && robot.tof_dist > 0.10 && robot.prev_tof_dist < 0.05 && tis > 1.0)
     {
       robot.rel_s = 0;
-      set_new_state(1);
     }
     else if (state == 1 && robot.TouchSwitch)
     {
@@ -50,6 +49,54 @@ class main_fsm_t : public state_machine_t
     {
       // robot.IRLine.crosses = 0;
       set_new_state(8);
+    }
+    else if (state == 10 && robot.xe > 0.88)
+    {
+      set_new_state(32);
+    }
+    else if (state == 11 && tis > 2.0)
+    {
+      if (abs(robot.thetae - (-3.14)) <= 20 * PI / 180)
+      {
+        set_new_state(0);
+      }
+    }
+    else if (state == 20 && robot.xe > 0.765)
+    {
+      robot.pick_ok = true;
+      set_new_state(21);
+    }
+    else if (state == 21 && tis > 3 && robot.pick_done == true)
+    {
+      robot.pick_ok = false;
+      robot.pick_done = false;
+      set_new_state(33);
+    }
+    else if (state == 29 && tis > 3 && robot.IRLine_Front.IR_values[3] > 600)
+    {
+
+      set_new_state(30);
+    }
+    else if (state == 30 && !(robot.ajustar_a == 2 && robot.ajustar_vn == 2))
+    {
+      set_new_state(31);
+    }
+    else if (state == 31 && robot.ajustar_a == 0 && robot.ajustar_vn == 0)
+    {
+      set_new_state(32);
+    }
+    else if (state == 31 && robot.ajustar_a == 2 && robot.ajustar_vn == 2)
+    {
+      set_new_state(30);
+    }
+
+    else if (state == 32 && robot.IRLine_Back.sense_cross)
+    {
+      set_new_state(20);
+    }
+    else if (state == 33 && robot.IRLine_Back.sense_cross)
+    {
+      set_new_state(29);
     }
     else if (state == 202 && tis > 2.0)
     {
@@ -103,92 +150,102 @@ class main_fsm_t : public state_machine_t
     if (state == 0)
     { // Robot Stoped
       robot.solenoid_PWM = 0;
+
       robot.setRobotVW(0, 0, 0);
     }
     else if (state == 1)
     { // Go: Get first box
-      robot.solenoid_PWM = 0;
-      // robot.followLineLeft(robot.follow_v, robot.follow_k);
-      // robot.gotoXYTheta(-0.7225, 0.44, PI/2);
     }
     else if (state == 2)
     { // Box Codes
-      if (robot.etapa < 2 && !robot.Box_picked && robot.IRLine_Back.sense_cross)
+      if (!robot.Box_picked && robot.IRLine_Back.sense_cross)
       {
+
         robot.setRobotVW(0.03, 0, 0);
         robot.etapa = 1;
+        robot.xe = 0;
       }
 
-      else if (robot.etapa < 3 && !robot.Box_picked && abs(robot.thetae) < 20 * PI / 180 && !robot.IRLine_Back.sense_cross)
+      else if (!robot.Box_picked && abs(robot.thetae) < 20 * PI / 180 && !robot.IRLine_Back.sense_cross)
       {
         robot.etapa = 2;
-        if (robot.xe > 0.03)
+        if (robot.xe > 0.02)
         {
           robot.Box_picked = 1;
         }
         else
         {
           robot.Correct_Line(robot.IRLine_Back.k_vn, robot.IRLine_Back.k_alfa);
-          robot.setRobotVW(0.03, robot.vn, robot.w);
+          robot.setRobotVW(0.02, robot.vn, robot.w);
         }
       }
-      else if (robot.etapa < 4 && robot.Box_picked && abs(robot.thetae) < 10 * PI / 180 && !robot.IRLine_Back.sense_cross)
-      {
-        robot.etapa = 3;
-        robot.setRobotVW(-0.03, robot.vn, robot.w);
-      }
-      else if (robot.etapa < 5 && robot.Box_picked && (abs(robot.thetae) < 70 * PI / 180 || robot.IRLine_Front.IR_values[2] < 500))
-      {
-        robot.etapa = 4;
-        robot.setRobotVW(0, 0, -0.2);
-      }
-
-      else if (robot.etapa < 6 && robot.IRLine_Front.IR_values[2] > 500 && abs(robot.thetae - (-PI / 2)) < 20 * PI / 180 && !robot.IRLine_Back.sense_cross)
-      {
-        robot.etapa = 5;
+      else if (robot.Box_picked && !robot.IRLine_Back.sense_cross)
+      { // voltar atrás
         robot.Correct_Line(robot.IRLine_Back.k_vn, robot.IRLine_Back.k_alfa);
-        robot.setRobotVW(0.03, robot.vn, robot.w);
-      }
-      else if (robot.etapa < 7 && (abs(robot.thetae) > 20 * PI / 180 || robot.IRLine_Front.IR_values[2] < 500))
-      { // Rodar esquerda
-        robot.etapa = 6;
-        robot.setRobotVW(0, 0, 0.2);
+        robot.setRobotVW(-0.03, robot.vn, robot.w);
         robot.time = 0;
       }
-
-      else if (robot.etapa < 8 && (robot.IRLine_Front.IR_total > 500) && robot.time < 7)
-      { // Ir para fente
-        robot.etapa = 7;
+      else if (robot.time < 2 || robot.IRLine_Front.IR_values[2] < 500)
+      {
         robot.time += 0.04;
-        robot.setRobotVW(0.03, 0, 0);
+        robot.setRobotVW(0, -0.04, -0.0196);
       }
-      else if (robot.etapa < 9 && (robot.ajustar_a > 0 || robot.ajustar_vn > 0))
-      { // equilibrar
-        robot.etapa = 8;
+      else if (robot.ajustar_a == 1 || robot.ajustar_vn == 1)
+      {
         robot.Correct_Line(robot.IRLine_Back.k_vn, robot.IRLine_Back.k_alfa);
         robot.setRobotVW(0, robot.vn, robot.w);
       }
-      else if (robot.etapa < 10 && !robot.IRLine_Back.sense_cross)
-      { // voltar à linha
-        robot.etapa = 9;
+      else if (!robot.IRLine_Back.sense_cross)
+      {
+        robot.Correct_Line(robot.IRLine_Back.k_vn, robot.IRLine_Back.k_alfa);
         robot.setRobotVW(-0.03, robot.vn, robot.w);
       }
-
       else
       {
-        robot.etapa = 15;
-        robot.setRobotVW(0, 0, 0);
+        robot.Box_picked = 0;
       }
     }
     else if (state == 3)
     { // Go back with the box
 
       robot.Correct_Line(robot.IRLine_Back.k_vn, robot.IRLine_Back.k_alfa);
+      robot.setRobotVW(0, robot.vn, robot.w);
     }
     else if (state == 4)
-    { // Turn arround
-      robot.solenoid_PWM = 180;
-      robot.setRobotVW(0, 0, 2.5);
+    { // Pick Boxes
+      if (robot.IRLine_Back.sense_cross)
+      {
+        robot.setRobotVW(0.03, 0, 0);
+        robot.xe = 0;
+      }
+      else if (robot.xe < 0.01)
+      {
+        robot.setRobotVW(0.03, robot.vn, robot.w);
+        robot.Correct_Line(robot.IRLine_Back.k_vn, robot.IRLine_Back.k_alfa);
+      }
+      else if (robot.time < 10 || robot.IRLine_Front.IR_values[2] < 500)
+      {
+        robot.time += 0.04;
+        if (robot.thetae < 25 * PI / 180)
+        {
+          robot.setRobotVW(0, 0, 0.08);
+        }
+        else
+        {
+
+          robot.setRobotVW(0, -0.05, 0);
+        }
+      }
+      else if (robot.ajustar_a != 0 || robot.ajustar_vn != 0)
+      {
+
+        robot.Correct_Line(robot.IRLine_Back.k_vn, robot.IRLine_Back.k_alfa);
+        robot.setRobotVW(0, robot.vn, robot.w);
+      }
+      else if (robot.ajustar_a == 0 && robot.ajustar_vn == 0)
+      {
+        robot.setRobotVW(0, robot.vn, robot.w);
+      }
     }
     else if (state == 5)
     { // long travel to the box final destination
@@ -215,8 +272,69 @@ class main_fsm_t : public state_machine_t
     }
     else if (state == 10)
     { // Test
-      robot.setRobotVW(0.1, 0, 0);
+      if (robot.xe < 0.85)
+      {
+        robot.Correct_Line(robot.IRLine_Back.k_vn, robot.IRLine_Back.k_alfa);
+        robot.setRobotVW(0.15, robot.vn, robot.w);
+      }
+      else
+      {
+        robot.Correct_Line(robot.IRLine_Back.k_vn, robot.IRLine_Back.k_alfa);
+        robot.setRobotVW(0.03, robot.vn, robot.w);
+      }
     }
+    else if (state == 11)
+    { // Test
+      if (dist(robot.xe, robot.ye, float(0.735), float(1.500)) >= 0.05)
+      {
+        robot.Correct_Line(robot.IRLine_Back.k_vn, robot.IRLine_Back.k_alfa);
+        robot.setRobotVW(0.06, robot.vn, robot.w);
+      }
+      else
+      {
+        robot.setRobotVW(0, 0, -0.2);
+      }
+    }
+    else if (state == 20)
+    { // Ir para pegar caixa
+
+      robot.Correct_Line(robot.IRLine_Back.k_vn, robot.IRLine_Back.k_alfa);
+      robot.setRobotVW(0.03, robot.vn, robot.w);
+    }
+    else if (state == 21)
+    { // Pegar Na caixa
+      robot.setRobotVW(0, 0, 0);
+    }
+    else if (state == 22)
+    {
+      robot.setRobotVW(0, 0, 0);
+    }
+
+    else if (state == 29)
+    { // mover para o lado
+      robot.setRobotVW(0, -0.04, -0.0195);
+    }
+    else if (state == 30)
+    { // mover para frente
+      robot.Correct_Line(robot.IRLine_Back.k_vn, robot.IRLine_Back.k_alfa);
+      robot.setRobotVW(0.01, 0, 0);
+    }
+    else if (state == 31)
+    { // Endireitar Na caixa
+      robot.Correct_Line(robot.IRLine_Back.k_vn, robot.IRLine_Back.k_alfa);
+      robot.setRobotVW(0, robot.vn, robot.w);
+    }
+    else if (state == 32)
+    { // Recuar até cruzamento
+      robot.setRobotVW(-0.01, 0, 0);
+      robot.xe=0.735;
+    }
+    else if (state == 33)
+    { // Recuar até cruzamento para depois rodar para o lado
+      robot.setRobotVW(-0.01, 0, 0);
+      robot.xe = 0.735;
+    }
+
     else if (state == 100)
     { // Control Stop
       robot.v_req = 0;
@@ -344,6 +462,10 @@ class LED_fsm_t : public state_machine_t
     else if (state == 2)
     { // LED on
       robot.led = 1;
+    }
+    else if (state == 3)
+    { // LED off
+      robot.led = 0;
     }
     else if (state == 3)
     { // LED off

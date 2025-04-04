@@ -16,7 +16,9 @@
 #include "http_ota.h"
 
 #define max_wifi_str 32
+#define order_len 5
 
+char boxes[5];
 char ssid[max_wifi_str];
 char password[max_wifi_str];
 
@@ -212,6 +214,23 @@ void process_command(command_frame_t frame)
   { // The 'u2' command sets the voltage for motor 1
     robot.IRLine_Back.IR_values[4] = frame.value;
   }
+  else if (frame.command_is("Box0"))
+  { // The 'u2' command sets the voltage for motor 1
+    strncpy(boxes, frame.text, order_len - 1);
+    if(!strcmp(boxes, "oooo") && robot.pfsm->state == 0)
+    {
+      robot.pfsm->set_new_state(10);
+      robot.pfsm->update_state();
+    }
+  }
+  else if (frame.command_is("PICK_DONE"))
+  { // The 'u1' command sets the voltage for motor 1
+    robot.pick_done = frame.value;
+  }
+  else if (frame.command_is("DROP_DONE"))
+  { // The 'u1' command sets the voltage for motor 1
+    robot.drop_done= frame.value;
+  }
   else if (frame.command_is("w1"))
   {
     robot.w1_req = frame.value;
@@ -267,7 +286,7 @@ void process_command(command_frame_t frame)
   }
   else if (frame.command_is("tr"))
   {
-    robot.thetae = frame.value;
+    // robot.thetae = frame.value;
   }
   else if (frame.command_is("xt"))
   {
@@ -373,9 +392,9 @@ void read_PIO_encoders(void)
   encoders[1].update();
   encoders[2].update();
   encoders[3].update();
-  robot.enc1 = -encoders[0].speed;
+  robot.enc1 = encoders[0].speed;
   robot.enc2 = encoders[1].speed;
-  robot.enc3 = -encoders[2].speed;
+  robot.enc3 = encoders[2].speed;
   robot.enc4 = encoders[3].speed;
 }
 
@@ -644,8 +663,8 @@ void setup()
   wheel_PID_pars.Kd = 0.5;
   */
   wheel_PID_pars.Kf = 0.3;
-  wheel_PID_pars.Kc = 0.15;
-  wheel_PID_pars.Ki = 1;
+  wheel_PID_pars.Kc = 1;
+  wheel_PID_pars.Ki = 2;
   wheel_PID_pars.Kd = 0;
   wheel_PID_pars.Kfd = 0;
   wheel_PID_pars.dt = control_interval;
@@ -860,15 +879,6 @@ void loop()
     robot.PWM_3 = pico4drive.voltage_to_PWM(robot.u3);
     robot.PWM_4 = pico4drive.voltage_to_PWM(robot.u4);
 
-    if (robot.stoped)
-    {
-      robot.PWM_1 = 0;
-      robot.PWM_2 = 0;
-      robot.PWM_3 = 0;
-      robot.PWM_4 = 0;
-      robot.solenoid_PWM = 0;
-    }
-
     pico4drive.set_driver_PWM(robot.PWM_1, MOTOR1A_PIN, MOTOR1B_PIN);
     pico4drive.set_driver_PWM(robot.PWM_2, MOTOR2A_PIN, MOTOR2B_PIN);
     pico4drive.set_driver_PWM(robot.PWM_3, MOTOR3A_PIN, MOTOR3B_PIN);
@@ -909,10 +919,10 @@ void loop()
     serial_commands.send_command("vn", robot.vn);
     serial_commands.send_command("w", robot.w);
 
-    // serial_commands.send_command("w1", robot.w1e);
-    // serial_commands.send_command("w2", robot.w2e);
-    // serial_commands.send_command("w3", robot.w3e);
-    // serial_commands.send_command("w4", robot.w4e);
+    serial_commands.send_command("w1", robot.w1e);
+    serial_commands.send_command("w2", robot.w2e);
+    serial_commands.send_command("w3", robot.w3e);
+    serial_commands.send_command("w4", robot.w4e);
 
     serial_commands.send_command("p1", robot.p1e);
 
@@ -997,6 +1007,9 @@ void loop()
     serial1_commands.send_command("IR2", robot.IRLine.IR_values[2]);
     serial1_commands.send_command("IR3", robot.IRLine.IR_values[3]);
     serial1_commands.send_command("IR4", robot.IRLine.IR_values[4]);*/
+
+    serial1_commands.send_command("PICK_OK", robot.pick_ok );
+    serial1_commands.send_command("DROP_OK", robot.pick_done);
 
     serial1_commands.flush();
 

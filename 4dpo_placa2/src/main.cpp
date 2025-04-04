@@ -530,8 +530,8 @@ void setup()
   init_control(arm, carrosel);
 
 
-  //arm.pos_init();
-  //carrosel.carrosel_pos_init();
+  arm.pos_init();
+  carrosel.carrosel_pos_init();
 
   //init_control(carrosel);
 }
@@ -706,7 +706,7 @@ void loop()
      
 
       // Debug information
-      serial_commands.send_command("Box0", irrecvbuffer);
+      serial1_commands.send_command("Box0", irrecvbuffer);
       
       serial_commands.send_command("swPin", digitalRead(switchPIN));
       serial_commands.send_command("dte", delta);
